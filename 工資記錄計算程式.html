@@ -388,6 +388,8 @@ td input[type="checkbox"], th input[type="checkbox"] {
         <select id="payMode">
           <option value="daily" data-i18n="optDaily">日薪（每日固定薪金）</option>
           <option value="monthly" data-i18n="optMonthly">月薪（每月固定薪金）</option>
+          <option value="hourly" data-i18n="optHourly">時薪（每小時計薪）</option>
+          <option value="manual" data-i18n="optManual">手動輸入（每日自行填金額）</option>
         </select>
       </div>
       <div>
@@ -410,7 +412,11 @@ td input[type="checkbox"], th input[type="checkbox"] {
         <label data-i18n="monthlySalary">每月薪金</label>
         <input type="number" id="monthlySalary" value="15000" min="0" step="any">
       </div>
-      <div>
+      <div id="hourlyRateField" style="display:none">
+        <label data-i18n="hourlyRate">每小時薪金</label>
+        <input type="number" id="hourlyRate" value="60" min="0" step="any">
+      </div>
+      <div id="otRateField">
         <label data-i18n="otRate">加班每小時薪金</label>
         <input type="number" id="otRate" value="80" min="0" step="any">
       </div>
@@ -440,6 +446,10 @@ td input[type="checkbox"], th input[type="checkbox"] {
       <div class="field" id="endField">
         <label data-i18n="end">下班時間</label>
         <input type="time" id="workEnd" value="18:00">
+      </div>
+      <div class="field" id="manualPayField" style="display:none">
+        <label data-i18n="manualPay">本日薪金（手動輸入）</label>
+        <input type="number" id="manualPay" placeholder="0" min="0" step="any">
       </div>
       <div class="field">
         <label data-i18n="note">備註（自由填寫，可留空）</label>
@@ -500,10 +510,14 @@ const I18N = {
     loginTitle: '🔒 請輸入密碼', loginBtn: '登入',
     settingsTitle: '⚙️ 基本設定',
     payMode: '計薪方式', optDaily: '日薪（每日固定薪金）', optMonthly: '月薪（每月固定薪金）',
+    optHourly: '時薪（每小時計薪）', optManual: '手動輸入（每日自行填金額）',
     currency: '貨幣單位（可自行輸入）', currencyPh: '例如 HKD / USD / TWD',
     normStart: '正常上班時間', normEnd: '正常下班時間',
-    dailyWage: '每日薪金', monthlySalary: '每月薪金', otRate: '加班每小時薪金',
-    settingsHint: '設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。',
+    dailyWage: '每日薪金', monthlySalary: '每月薪金', hourlyRate: '每小時薪金',
+    otRate: '加班每小時薪金', manualPay: '本日薪金（手動輸入）',
+    settingsHint: '設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。時薪模式：正常時數 × 時薪 ＋ 加班費。手動模式：每天自行輸入金額。',
+    alertManual: '請輸入本日薪金',
+    pvHourly: '正常 {0} 小時（{1}）', pvManual: '手動輸入 {0}',
     entryTitle: '📝 輸入每日記錄',
     date: '日期', type: '類型', optWork: '上班', optOff: '休假／假日',
     start: '上班時間', end: '下班時間',
@@ -546,10 +560,14 @@ const I18N = {
     loginTitle: '🔒 Enter Password', loginBtn: 'Log in',
     settingsTitle: '⚙️ Settings',
     payMode: 'Pay mode', optDaily: 'Daily wage (fixed per day)', optMonthly: 'Monthly salary (fixed per month)',
+    optHourly: 'Hourly wage', optManual: 'Manual (enter amount per day)',
     currency: 'Currency (any label)', currencyPh: 'e.g. HKD / USD / TWD',
     normStart: 'Normal start time', normEnd: 'Normal end time',
-    dailyWage: 'Daily wage', monthlySalary: 'Monthly salary', otRate: 'Overtime rate (per hour)',
-    settingsHint: 'Settings are saved automatically. Overtime = hours worked beyond your normal schedule (e.g. schedule 09:00–18:00, entering 09:00–20:00 = 2 h overtime). Monthly mode: total = salary + overtime − deductions.',
+    dailyWage: 'Daily wage', monthlySalary: 'Monthly salary', hourlyRate: 'Hourly rate',
+    otRate: 'Overtime rate (per hour)', manualPay: 'Day pay (manual)',
+    settingsHint: 'Settings are saved automatically. Overtime = hours worked beyond your normal schedule (e.g. schedule 09:00–18:00, entering 09:00–20:00 = 2 h overtime). Monthly mode: total = salary + overtime − deductions. Hourly mode: regular hours × rate + overtime. Manual mode: type each day\'s amount yourself.',
+    alertManual: 'Please enter the day\'s pay',
+    pvHourly: 'regular {0} h ({1})', pvManual: 'manual {0}',
     entryTitle: '📝 Daily Entry',
     date: 'Date', type: 'Type', optWork: 'Work day', optOff: 'Day off',
     start: 'Start time', end: 'End time',
@@ -758,15 +776,19 @@ function loadSettings() {
     document.getElementById('normEnd').value = s.normEnd ?? '18:00';
     document.getElementById('dailyWage').value = s.dailyWage ?? 750;
     document.getElementById('monthlySalary').value = s.monthlySalary ?? 15000;
+    document.getElementById('hourlyRate').value = s.hourlyRate ?? 60;
     document.getElementById('otRate').value = s.otRate ?? 80;
   }
   applyModeVisibility();
 }
 
 function applyModeVisibility() {
-  const monthly = document.getElementById('payMode').value === 'monthly';
-  document.getElementById('dailyWageField').style.display = monthly ? 'none' : '';
-  document.getElementById('monthlySalaryField').style.display = monthly ? '' : 'none';
+  const mode = document.getElementById('payMode').value;
+  document.getElementById('dailyWageField').style.display = mode === 'daily' ? '' : 'none';
+  document.getElementById('monthlySalaryField').style.display = mode === 'monthly' ? '' : 'none';
+  document.getElementById('hourlyRateField').style.display = mode === 'hourly' ? '' : 'none';
+  document.getElementById('otRateField').style.display = mode === 'manual' ? 'none' : '';
+  applyDayTypeVisibility();
 }
 
 function saveSettings() {
@@ -787,6 +809,7 @@ function getSettings() {
     normEnd: document.getElementById('normEnd').value || '18:00',
     dailyWage: parseFloat(document.getElementById('dailyWage').value) || 0,
     monthlySalary: parseFloat(document.getElementById('monthlySalary').value) || 0,
+    hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0,
     otRate: parseFloat(document.getElementById('otRate').value) || 0
   };
 }
@@ -819,13 +842,21 @@ function workedHours(start, end) {
   return diff / 60;
 }
 
-// 依設定計算某天的薪金明細（月薪模式底薪計 0，底薪在月結時一次加入）
+// 依設定計算某天的薪金明細
+// 日薪：底薪固定；月薪：底薪計 0（月結時一次加入）；時薪：正常時數 × 時薪
 function calcDay(start, end, s, deduction = 0) {
   const normalHours = workedHours(s.normStart, s.normEnd);
   const actualHours = workedHours(start, end);
   const otHours = Math.max(0, Math.round((actualHours - normalHours) * 100) / 100);
   const otPay = Math.round(otHours * s.otRate * 100) / 100;
-  const base = s.payMode === 'monthly' ? 0 : s.dailyWage;
+  let base;
+  if (s.payMode === 'monthly') {
+    base = 0;
+  } else if (s.payMode === 'hourly') {
+    base = Math.round(Math.min(actualHours, normalHours) * s.hourlyRate * 100) / 100;
+  } else {
+    base = s.dailyWage;
+  }
   const total = Math.round((base + otPay - deduction) * 100) / 100;
   return { actualHours, otHours, otPay, base, total };
 }
@@ -846,8 +877,10 @@ function getDeductionInput() {
 
 function applyDayTypeVisibility() {
   const off = document.getElementById('dayType').value === 'off';
+  const manual = document.getElementById('payMode').value === 'manual';
   document.getElementById('startField').style.display = off ? 'none' : '';
   document.getElementById('endField').style.display = off ? 'none' : '';
+  document.getElementById('manualPayField').style.display = (manual && !off) ? '' : 'none';
 }
 
 function updatePreview() {
@@ -865,12 +898,23 @@ function updatePreview() {
     return;
   }
 
+  if (s.payMode === 'manual') {
+    const amt = Math.max(0, parseFloat(document.getElementById('manualPay').value) || 0);
+    const total = Math.round((amt - ded) * 100) / 100;
+    let html = T('pvManual', fmtMoney(amt));
+    if (ded > 0) html += ` − <span style="color:var(--danger)">${T('pvDeduct', fmtMoney(ded))}</span>`;
+    html += ` = ${T('pvDayPay')} <b>${s.currency} ${fmtMoney(total)}</b>`;
+    el.innerHTML = html;
+    return;
+  }
+
   const start = document.getElementById('workStart').value;
   const end = document.getElementById('workEnd').value;
   if (!start || !end) { el.innerHTML = ''; return; }
   const r = calcDay(start, end, s, ded);
   let mid = '';
   if (s.payMode === 'daily') mid += T('pvBase', fmtMoney(s.dailyWage));
+  if (s.payMode === 'hourly') mid += T('pvHourly', Math.min(r.actualHours, workedHours(s.normStart, s.normEnd)), fmtMoney(r.base));
   if (r.otHours > 0) mid += `${mid ? ' ＋ ' : ''}<span class="ot">${T('pvOt', r.otHours, fmtMoney(r.otPay))}</span>`;
   if (ded > 0) mid += `${mid ? ' − ' : '−'}<span style="color:var(--danger)">${T('pvDeduct', fmtMoney(ded))}</span>`;
   if (!mid) mid = T('pvNone');
@@ -892,6 +936,9 @@ function editRecord(date) {
     document.getElementById('workStart').value = r.start;
     document.getElementById('workEnd').value = r.end;
   }
+  if (r.payMode === 'manual' && r.type !== 'off') {
+    document.getElementById('manualPay').value = r.base;
+  }
   document.getElementById('noteInput').value = r.note || '';
   document.getElementById('deduction').value = (r.deduction || 0) > 0 ? r.deduction : '';
   document.getElementById('addBtn').textContent = T('updateBtn');
@@ -905,6 +952,7 @@ function cancelEdit() {
   editingDate = null;
   document.getElementById('deduction').value = '';
   document.getElementById('noteInput').value = '';
+  document.getElementById('manualPay').value = '';
   document.getElementById('dayType').value = 'work';
   document.getElementById('addBtn').textContent = T('addBtn');
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -915,10 +963,14 @@ function cancelEdit() {
 function addRecord() {
   const date = document.getElementById('workDate').value;
   const isOff = document.getElementById('dayType').value === 'off';
+  const isManual = document.getElementById('payMode').value === 'manual';
   const start = document.getElementById('workStart').value;
   const end = document.getElementById('workEnd').value;
   if (!date) { alert(T('alertDate')); return; }
-  if (!isOff && (!start || !end)) { alert(T('alertTimes')); return; }
+  if (!isOff && !isManual && (!start || !end)) { alert(T('alertTimes')); return; }
+  if (!isOff && isManual && document.getElementById('manualPay').value === '') {
+    alert(T('alertManual')); return;
+  }
 
   const records = loadRecords();
   if (records[date] && date !== editingDate &&
@@ -942,6 +994,21 @@ function addRecord() {
       otPay: 0,
       deduction: ded,
       total: Math.round(-ded * 100) / 100,
+      currency: s.currency
+    };
+  } else if (isManual) {
+    const amt = Math.max(0, parseFloat(document.getElementById('manualPay').value) || 0);
+    records[date] = {
+      type: 'work',
+      note,
+      start, end,
+      payMode: s.payMode,
+      base: amt,
+      otHours: 0,
+      otRate: s.otRate,
+      otPay: 0,
+      deduction: ded,
+      total: Math.round((amt - ded) * 100) / 100,
       currency: s.currency
     };
   } else {
@@ -1035,7 +1102,8 @@ function render() {
     if (isOff) offDays++; else workDays++;
     const checked = selectedDates.has(d) ? 'checked' : '';
     const totalCell = (monthly && r.total > 0 ? '+' : '') + fmtMoney(r.total);
-    const timeCell = isOff ? `<span class="off-badge">${T('offBadge')}</span>` : `${r.start}–${r.end}`;
+    const timeCell = isOff ? `<span class="off-badge">${T('offBadge')}</span>`
+      : (r.start && r.end ? `${r.start}–${r.end}` : '—');
     const noteCell = r.note ? `<span class="note-text">${esc(r.note)}</span>` : '—';
     rows += `<tr>
       <td><input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)"></td>
@@ -1053,7 +1121,8 @@ function render() {
 
     const wd = WEEKDAYS[new Date(d + 'T00:00:00').getDay()];
     const amtClass = r.total < 0 ? ' neg' : (r.total === 0 ? ' zero' : '');
-    let sub = isOff ? `<span class="off-badge">${T('offBadge')}</span>` : `<span>${r.start}–${r.end}</span>`;
+    let sub = isOff ? `<span class="off-badge">${T('offBadge')}</span>`
+      : (r.start && r.end ? `<span>${r.start}–${r.end}</span>` : '');
     if (r.otHours > 0) sub += `<span class="ot">${T('cardOt', r.otHours, fmtMoney(r.otPay))}</span>`;
     if (ded > 0) sub += `<span class="ded">${T('cardDeduct', fmtMoney(ded))}</span>`;
     if (r.note) sub += `<span class="note">📝 ${esc(r.note)}</span>`;
@@ -1138,7 +1207,7 @@ function applyTheme(theme) {
   document.getElementById('monthPicker').value = todayStr.slice(0, 7);
 
   // 設定變更時自動儲存並更新畫面
-  for (const id of ['payMode', 'currency', 'normStart', 'normEnd', 'dailyWage', 'monthlySalary', 'otRate']) {
+  for (const id of ['payMode', 'currency', 'normStart', 'normEnd', 'dailyWage', 'monthlySalary', 'hourlyRate', 'otRate']) {
     document.getElementById(id).addEventListener('change', () => {
       applyModeVisibility();
       saveSettings();
@@ -1146,7 +1215,7 @@ function applyTheme(theme) {
       render();
     });
   }
-  for (const id of ['workStart', 'workEnd', 'deduction', 'noteInput']) {
+  for (const id of ['workStart', 'workEnd', 'deduction', 'noteInput', 'manualPay']) {
     document.getElementById(id).addEventListener('input', updatePreview);
   }
 

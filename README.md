@@ -10,9 +10,11 @@ A self-hosted wage tracking app. Record your daily work hours, overtime, leave d
 
 - **Bilingual UI** — switch between English and Traditional Chinese with one tap (auto-detects your browser language on first visit)
 - **24-hour time input** — enter daily start/end times (e.g. `09:00`–`18:00`); overnight shifts across midnight are handled
-- **Two pay modes**
+- **Four pay modes**
   - *Daily wage*: fixed pay per day (e.g. 750/day)
   - *Monthly salary*: fixed pay per month (e.g. 15000/month); monthly total = salary + overtime − deductions
+  - *Hourly wage*: regular hours × hourly rate, overtime hours at the overtime rate
+  - *Manual*: type each day's amount yourself (no automatic calculation)
 - **Overtime** — hours beyond your normal schedule are paid at a separate hourly rate (e.g. work `09:00`–`20:00` with a `09:00`–`18:00` schedule = 2 h overtime)
 - **Leave / holiday records** — mark a day as a day off with a free-text note (e.g. "sick leave"), with an optional deduction amount
 - **Deductions** — optional amount per day for leave, lateness or early departure
@@ -91,6 +93,7 @@ Back up `wage_data.json` to keep your records safe.
 
 ## Version
 
+- **1.2** — two new pay modes: hourly wage and manual daily amount
 - **1.1** — bilingual UI (English / 繁體中文) with one-tap language switch
 - **1.0** — first public release
 
@@ -111,7 +114,7 @@ Back up `wage_data.json` to keep your records safe.
 - **記錄休假**：類型選「休假／假日」，可自由填備註（如「有事請假」）和扣款金額
 - **修改記錄**：按記錄上的 ✎ 編輯按鈕，日期輸錯也能改
 - **自選日數合計**：勾選任何幾天的記錄，即時顯示那幾天的工資合計
-- **計薪方式**：日薪（每日固定）或月薪（每月固定 ＋ 加班 − 扣款）兩種模式
+- **計薪方式**：日薪（每日固定）、月薪（每月固定 ＋ 加班 − 扣款）、時薪（正常時數 × 時薪 ＋ 加班費）、手動輸入（每天自行填金額）四種模式
 
 ## 外網連線
 
