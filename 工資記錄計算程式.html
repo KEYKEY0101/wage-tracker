@@ -74,6 +74,26 @@ header h1 { font-size: 22px; }
   align-items: center;
   gap: 8px;
 }
+/* 可摺疊的設定卡片 */
+h2.collapsible {
+  cursor: pointer;
+  user-select: none;
+  justify-content: space-between;
+}
+h2.collapsible .chev {
+  font-size: 14px;
+  color: var(--text-dim);
+  transition: transform 0.25s ease;
+}
+#settingsCard.open .chev { transform: rotate(90deg); }
+#settingsCard:not(.open) h2 { margin-bottom: 0; }
+.settings-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+#settingsCard.open .settings-wrap { grid-template-rows: 1fr; }
+.settings-inner { overflow: hidden; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -379,9 +399,14 @@ td input[type="checkbox"], th input[type="checkbox"] {
     </div>
   </header>
 
-  <!-- 設定 -->
-  <div class="card">
-    <h2 data-i18n="settingsTitle">⚙️ 基本設定</h2>
+  <!-- 設定（可摺疊） -->
+  <div class="card" id="settingsCard">
+    <h2 class="collapsible" onclick="toggleSettings()">
+      <span data-i18n="settingsTitle">⚙️ 基本設定</span>
+      <span class="chev" id="settingsChev">▸</span>
+    </h2>
+    <div class="settings-wrap">
+    <div class="settings-inner">
     <div class="grid">
       <div>
         <label data-i18n="payMode">計薪方式</label>
@@ -422,6 +447,8 @@ td input[type="checkbox"], th input[type="checkbox"] {
       </div>
     </div>
     <div class="hint" data-i18n="settingsHint">設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。</div>
+    </div>
+    </div>
   </div>
 
   <!-- 每日輸入 -->
@@ -1178,6 +1205,12 @@ function render() {
   }
 }
 
+// 基本設定摺疊：點標題展開／收起，狀態記憶
+function toggleSettings() {
+  const open = document.getElementById('settingsCard').classList.toggle('open');
+  localStorage.setItem('settingsOpen', open ? '1' : '0');
+}
+
 function toggleTheme() {
   const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   applyTheme(cur);
@@ -1199,6 +1232,10 @@ function applyTheme(theme) {
   applyLang();
   loadSettings();
   applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+  // 設定卡片預設收起，記住上次的展開狀態
+  if (localStorage.getItem('settingsOpen') === '1') {
+    document.getElementById('settingsCard').classList.add('open');
+  }
 
   const today = new Date();
   const pad = n => String(n).padStart(2, '0');

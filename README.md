@@ -93,6 +93,7 @@ Back up `wage_data.json` to keep your records safe.
 
 ## Version
 
+- **1.3** — collapsible settings panel (tap the header to expand/collapse, state remembered)
 - **1.2** — two new pay modes: hourly wage and manual daily amount
 - **1.1** — bilingual UI (English / 繁體中文) with one-tap language switch
 - **1.0** — first public release
