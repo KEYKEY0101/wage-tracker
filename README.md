@@ -8,6 +8,7 @@ A self-hosted wage tracking app. Record your daily work hours, overtime, leave d
 
 ## Features
 
+- **Bilingual UI** — switch between English and Traditional Chinese with one tap (auto-detects your browser language on first visit)
 - **24-hour time input** — enter daily start/end times (e.g. `09:00`–`18:00`); overnight shifts across midnight are handled
 - **Two pay modes**
   - *Daily wage*: fixed pay per day (e.g. 750/day)
@@ -90,7 +91,8 @@ Back up `wage_data.json` to keep your records safe.
 
 ## Version
 
-**1.0** — first public release.
+- **1.1** — bilingual UI (English / 繁體中文) with one-tap language switch
+- **1.0** — first public release
 
 ---
 

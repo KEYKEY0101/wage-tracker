@@ -362,93 +362,96 @@ td input[type="checkbox"], th input[type="checkbox"] {
 <body>
 <div class="login-overlay" id="loginOverlay" style="display:none">
   <div class="login-card">
-    <h2>🔒 請輸入密碼</h2>
+    <h2 data-i18n="loginTitle">🔒 請輸入密碼</h2>
     <input type="password" id="loginPw" inputmode="numeric" autocomplete="current-password"
            placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="primary" onclick="doLogin()">登入</button>
+    <button class="primary" onclick="doLogin()" data-i18n="loginBtn">登入</button>
     <div class="login-msg" id="loginMsg"></div>
   </div>
 </div>
 <div class="sync-dot" id="syncDot"></div>
 <div class="container">
   <header>
-    <h1>💰 工資記錄計算程式</h1>
-    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+    <h1 data-i18n="appTitle">💰 工資記錄計算程式</h1>
+    <div style="display:flex;gap:8px">
+      <button class="theme-btn" id="langBtn" onclick="toggleLang()">EN</button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+    </div>
   </header>
 
   <!-- 設定 -->
   <div class="card">
-    <h2>⚙️ 基本設定</h2>
+    <h2 data-i18n="settingsTitle">⚙️ 基本設定</h2>
     <div class="grid">
       <div>
-        <label>計薪方式</label>
+        <label data-i18n="payMode">計薪方式</label>
         <select id="payMode">
-          <option value="daily">日薪（每日固定薪金）</option>
-          <option value="monthly">月薪（每月固定薪金）</option>
+          <option value="daily" data-i18n="optDaily">日薪（每日固定薪金）</option>
+          <option value="monthly" data-i18n="optMonthly">月薪（每月固定薪金）</option>
         </select>
       </div>
       <div>
-        <label>貨幣單位（可自行輸入）</label>
-        <input type="text" id="currency" value="HKD" placeholder="例如 HKD / USD / TWD">
+        <label data-i18n="currency">貨幣單位（可自行輸入）</label>
+        <input type="text" id="currency" value="HKD" placeholder="例如 HKD / USD / TWD" data-i18n-ph="currencyPh">
       </div>
       <div>
-        <label>正常上班時間</label>
+        <label data-i18n="normStart">正常上班時間</label>
         <input type="time" id="normStart" value="09:00">
       </div>
       <div>
-        <label>正常下班時間</label>
+        <label data-i18n="normEnd">正常下班時間</label>
         <input type="time" id="normEnd" value="18:00">
       </div>
       <div id="dailyWageField">
-        <label>每日薪金</label>
+        <label data-i18n="dailyWage">每日薪金</label>
         <input type="number" id="dailyWage" value="750" min="0" step="any">
       </div>
       <div id="monthlySalaryField" style="display:none">
-        <label>每月薪金</label>
+        <label data-i18n="monthlySalary">每月薪金</label>
         <input type="number" id="monthlySalary" value="15000" min="0" step="any">
       </div>
       <div>
-        <label>加班每小時薪金</label>
+        <label data-i18n="otRate">加班每小時薪金</label>
         <input type="number" id="otRate" value="80" min="0" step="any">
       </div>
     </div>
-    <div class="hint">設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。</div>
+    <div class="hint" data-i18n="settingsHint">設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。</div>
   </div>
 
   <!-- 每日輸入 -->
   <div class="card" id="entryCard">
-    <h2>📝 輸入每日記錄</h2>
+    <h2 data-i18n="entryTitle">📝 輸入每日記錄</h2>
     <div class="add-row">
       <div class="field">
-        <label>日期</label>
+        <label data-i18n="date">日期</label>
         <input type="date" id="workDate">
       </div>
       <div class="field">
-        <label>類型</label>
+        <label data-i18n="type">類型</label>
         <select id="dayType" onchange="applyDayTypeVisibility(); updatePreview()">
-          <option value="work">上班</option>
-          <option value="off">休假／假日</option>
+          <option value="work" data-i18n="optWork">上班</option>
+          <option value="off" data-i18n="optOff">休假／假日</option>
         </select>
       </div>
       <div class="field" id="startField">
-        <label>上班時間</label>
+        <label data-i18n="start">上班時間</label>
         <input type="time" id="workStart" value="09:00">
       </div>
       <div class="field" id="endField">
-        <label>下班時間</label>
+        <label data-i18n="end">下班時間</label>
         <input type="time" id="workEnd" value="18:00">
       </div>
       <div class="field">
-        <label>備註（自由填寫，可留空）</label>
-        <input type="text" id="noteInput" placeholder="例如：有事請假、代班…" maxlength="50">
+        <label data-i18n="note">備註（自由填寫，可留空）</label>
+        <input type="text" id="noteInput" placeholder="例如：有事請假、代班…" maxlength="50" data-i18n-ph="notePh">
       </div>
       <div class="field">
-        <label>扣款金額（請假／遲到早退，可留空）</label>
+        <label data-i18n="deduction">扣款金額（請假／遲到早退，可留空）</label>
         <input type="number" id="deduction" placeholder="0" min="0" step="any">
       </div>
       <div class="btn-col">
         <button class="primary" id="addBtn" onclick="addRecord()">新增記錄</button>
-        <button class="mini-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none">取消編輯</button>
+        <button class="mini-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none" data-i18n="cancelEdit">取消編輯</button>
       </div>
     </div>
     <div class="preview-line" id="previewLine"></div>
@@ -456,28 +459,28 @@ td input[type="checkbox"], th input[type="checkbox"] {
 
   <!-- 月份總覽 -->
   <div class="card">
-    <h2>📅 月份總覽</h2>
+    <h2 data-i18n="monthTitle">📅 月份總覽</h2>
     <div class="month-bar">
-      <label style="margin:0">選擇月份：</label>
+      <label style="margin:0" data-i18n="monthPick">選擇月份：</label>
       <input type="month" id="monthPicker" onchange="render()">
     </div>
     <div class="total-display">
-      <div class="label">當月總工資</div>
+      <div class="label" data-i18n="monthTotalLabel">當月總工資</div>
       <div class="amount" id="monthTotal">HKD 0</div>
       <div class="label" id="monthBreakdown" style="margin-top:4px"></div>
       <div class="sub-stats">
-        <span>出勤天數：<b id="statDays">0</b> 天</span>
-        <span>休假天數：<b id="statOffDays">0</b> 天</span>
-        <span>加班總時數：<b id="statOtHours">0</b> 小時</span>
-        <span>加班費合計：<b id="statOtPay">0</b></span>
-        <span>扣款合計：<b id="statDeduct">0</b></span>
+        <span><span data-i18n="statWork">出勤天數：</span><b id="statDays">0</b><span data-i18n="unitDays"> 天</span></span>
+        <span><span data-i18n="statOff">休假天數：</span><b id="statOffDays">0</b><span data-i18n="unitDays"> 天</span></span>
+        <span><span data-i18n="statOtH">加班總時數：</span><b id="statOtHours">0</b><span data-i18n="unitHours"> 小時</span></span>
+        <span><span data-i18n="statOtPay">加班費合計：</span><b id="statOtPay">0</b></span>
+        <span><span data-i18n="statDeduct">扣款合計：</span><b id="statDeduct">0</b></span>
       </div>
     </div>
   </div>
 
   <!-- 記錄列表 -->
   <div class="card">
-    <h2>📋 當月記錄</h2>
+    <h2 data-i18n="recordsTitle">📋 當月記錄</h2>
     <div id="recordList"></div>
   </div>
 </div>
@@ -487,6 +490,144 @@ const SETTINGS_KEY = 'wageCalcSettings';
 const RECORDS_KEY = 'wageCalcRecords';
 const THEME_KEY = 'appTheme';
 const TOKEN_KEY = 'wageToken';
+const LANG_KEY = 'appLang';
+
+// ---------- 多語言 i18n ----------
+const I18N = {
+  zh: {
+    appTitle: '💰 工資記錄計算程式',
+    themeDark: '🌙 深色', themeLight: '☀️ 淺色', langBtn: 'EN',
+    loginTitle: '🔒 請輸入密碼', loginBtn: '登入',
+    settingsTitle: '⚙️ 基本設定',
+    payMode: '計薪方式', optDaily: '日薪（每日固定薪金）', optMonthly: '月薪（每月固定薪金）',
+    currency: '貨幣單位（可自行輸入）', currencyPh: '例如 HKD / USD / TWD',
+    normStart: '正常上班時間', normEnd: '正常下班時間',
+    dailyWage: '每日薪金', monthlySalary: '每月薪金', otRate: '加班每小時薪金',
+    settingsHint: '設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。',
+    entryTitle: '📝 輸入每日記錄',
+    date: '日期', type: '類型', optWork: '上班', optOff: '休假／假日',
+    start: '上班時間', end: '下班時間',
+    note: '備註（自由填寫，可留空）', notePh: '例如：有事請假、代班…',
+    deduction: '扣款金額（請假／遲到早退，可留空）',
+    addBtn: '新增記錄', updateBtn: '更新記錄', cancelEdit: '取消編輯',
+    monthTitle: '📅 月份總覽', monthPick: '選擇月份：', monthTotalLabel: '當月總工資',
+    statWork: '出勤天數：', statOff: '休假天數：', statOtH: '加班總時數：',
+    statOtPay: '加班費合計：', statDeduct: '扣款合計：',
+    unitDays: ' 天', unitHours: ' 小時',
+    recordsTitle: '📋 當月記錄',
+    selected: '已勾選', selTotalSuffix: '天，合計：', selectAll: '全選', clearSel: '清除勾選',
+    selHint: '勾選日期即可計算那幾天的工資合計',
+    empty: '本月尚無記錄，請在上方輸入每日上下班時間。',
+    thDate: '日期', thTime: '上下班時間', thOt: '加班', thOtPay: '加班費',
+    thDeduct: '扣款', thNote: '備註', thDayPay: '本日薪金', thDayAdj: '本日加減額',
+    edit: '編輯', del: '刪除',
+    offBadge: '休假', otBadge: '+{0} 小時', cardOt: '加班 {0} 小時 +{1}', cardDeduct: '扣款 −{0}',
+    confirmOverwrite: '{0} 已有記錄，要覆蓋嗎？',
+    confirmDelete: '確定刪除 {0} 的記錄？',
+    confirmMigrate: '偵測到本裝置瀏覽器有舊記錄，要上傳到伺服器嗎？（上傳後所有裝置都看得到）',
+    alertDate: '請選擇日期', alertTimes: '請輸入上班及下班時間',
+    saved: '已儲存 ✓', syncFail: '⚠ 未能連線伺服器，資料未儲存',
+    loginExpired: '登入已失效，請重新輸入密碼',
+    pwWrong: '密碼錯誤，剩餘 {0} 次機會',
+    pwLocked: '錯誤次數太多，已鎖定，請 {0} 分鐘後再試',
+    pwHard: '已鎖死：請在電腦的啟動器視窗按「解鎖」後再登入',
+    loginFail: '登入失敗，請再試一次', noServer: '無法連線伺服器',
+    noServerHint: '無法連線伺服器，請確認電腦上的啟動器已開啟',
+    connecting: '連線中…',
+    pvWork: '工作 {0} 小時 → ', pvBase: '底薪 {0}', pvOt: '加班 {0} 小時（{1}）',
+    pvDeduct: '扣款 {0}', pvNone: '無加班、無扣款',
+    pvDayPay: '本日薪金', pvDayAdj: '本日加減額', pvOff: '休假', pvDay: '本日',
+    breakdown: '月薪 {0} ＋ 加班 {1} − 扣款 {2}',
+    weekdays: ['日', '一', '二', '三', '四', '五', '六']
+  },
+  en: {
+    appTitle: '💰 Wage Tracker',
+    themeDark: '🌙 Dark', themeLight: '☀️ Light', langBtn: '中文',
+    loginTitle: '🔒 Enter Password', loginBtn: 'Log in',
+    settingsTitle: '⚙️ Settings',
+    payMode: 'Pay mode', optDaily: 'Daily wage (fixed per day)', optMonthly: 'Monthly salary (fixed per month)',
+    currency: 'Currency (any label)', currencyPh: 'e.g. HKD / USD / TWD',
+    normStart: 'Normal start time', normEnd: 'Normal end time',
+    dailyWage: 'Daily wage', monthlySalary: 'Monthly salary', otRate: 'Overtime rate (per hour)',
+    settingsHint: 'Settings are saved automatically. Overtime = hours worked beyond your normal schedule (e.g. schedule 09:00–18:00, entering 09:00–20:00 = 2 h overtime). Monthly mode: total = salary + overtime − deductions.',
+    entryTitle: '📝 Daily Entry',
+    date: 'Date', type: 'Type', optWork: 'Work day', optOff: 'Day off',
+    start: 'Start time', end: 'End time',
+    note: 'Note (optional)', notePh: 'e.g. sick leave, covering a shift…',
+    deduction: 'Deduction (leave / lateness, optional)',
+    addBtn: 'Add record', updateBtn: 'Update record', cancelEdit: 'Cancel',
+    monthTitle: '📅 Monthly Overview', monthPick: 'Month:', monthTotalLabel: 'Total this month',
+    statWork: 'Work days: ', statOff: 'Days off: ', statOtH: 'OT hours: ',
+    statOtPay: 'OT pay: ', statDeduct: 'Deductions: ',
+    unitDays: '', unitHours: ' h',
+    recordsTitle: '📋 Records',
+    selected: 'Selected', selTotalSuffix: 'day(s), total:', selectAll: 'Select all', clearSel: 'Clear',
+    selHint: 'Tick any days to sum just those wages',
+    empty: 'No records this month yet — add your first day above.',
+    thDate: 'Date', thTime: 'Hours', thOt: 'OT', thOtPay: 'OT pay',
+    thDeduct: 'Deduction', thNote: 'Note', thDayPay: 'Day pay', thDayAdj: 'Day +/−',
+    edit: 'Edit', del: 'Delete',
+    offBadge: 'Off', otBadge: '+{0} h', cardOt: 'OT {0} h +{1}', cardDeduct: 'Deduct −{0}',
+    confirmOverwrite: '{0} already has a record. Overwrite it?',
+    confirmDelete: 'Delete the record for {0}?',
+    confirmMigrate: 'Old records were found in this browser. Upload them to the server so all devices can see them?',
+    alertDate: 'Please pick a date', alertTimes: 'Please enter start and end times',
+    saved: 'Saved ✓', syncFail: '⚠ Server unreachable — changes not saved',
+    loginExpired: 'Session expired, please log in again',
+    pwWrong: 'Wrong password, {0} attempt(s) left',
+    pwLocked: 'Too many attempts — locked, try again in {0} minute(s)',
+    pwHard: 'Hard-locked: press "Unlock" in the launcher on the PC, then log in again',
+    loginFail: 'Login failed, please try again', noServer: 'Cannot reach the server',
+    noServerHint: 'Cannot reach the server — make sure the launcher is running on the PC',
+    connecting: 'Connecting…',
+    pvWork: 'Worked {0} h → ', pvBase: 'base {0}', pvOt: 'OT {0} h ({1})',
+    pvDeduct: 'deduction {0}', pvNone: 'no overtime, no deduction',
+    pvDayPay: 'day pay', pvDayAdj: 'day +/−', pvOff: 'Day off', pvDay: 'day',
+    breakdown: 'Salary {0} + OT {1} − Deductions {2}',
+    weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  }
+};
+
+let LANG = localStorage.getItem(LANG_KEY) ||
+  ((navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
+
+function T(key, ...args) {
+  let s = (I18N[LANG] && I18N[LANG][key]) ?? I18N.zh[key] ?? key;
+  args.forEach((a, i) => { s = s.replaceAll('{' + i + '}', a); });
+  return s;
+}
+
+function applyLang() {
+  document.documentElement.lang = LANG === 'zh' ? 'zh-Hant' : 'en';
+  document.title = LANG === 'zh' ? '工資記錄計算程式' : 'Wage Tracker';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = T(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = T(el.getAttribute('data-i18n-ph'));
+  });
+  document.getElementById('langBtn').textContent = T('langBtn');
+  document.getElementById('addBtn').textContent =
+    (typeof editingDate !== 'undefined' && editingDate) ? T('updateBtn') : T('addBtn');
+  applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+}
+
+function toggleLang() {
+  LANG = LANG === 'zh' ? 'en' : 'zh';
+  localStorage.setItem(LANG_KEY, LANG);
+  applyLang();
+  updatePreview();
+  render();
+}
+
+// 卡片日期：中文「7月18日（五）」，英文「Jul 18 (Fri)」
+function fmtCardDate(d, wd) {
+  const [, mm, dd] = d.split('-');
+  if (LANG === 'zh') return `${parseInt(mm)}月${parseInt(dd)}日（${wd}）`;
+  const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(mm) - 1];
+  return `${M} ${parseInt(dd)} (${wd})`;
+}
 
 // 經啟動器伺服器開啟時，資料集中存在電腦；直接開 HTML 檔案時仍用瀏覽器儲存
 const SERVER_MODE = location.protocol === 'http:' || location.protocol === 'https:';
@@ -512,11 +653,12 @@ async function syncNow() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(DB)
     });
-    if (res.status === 401) { showLogin('登入已失效，請重新輸入密碼'); return; }
-    dot.textContent = '已儲存 ✓';
-    setTimeout(() => { if (dot.textContent === '已儲存 ✓') dot.textContent = ''; }, 1500);
+    if (res.status === 401) { showLogin(T('loginExpired')); return; }
+    const label = T('saved');
+    dot.textContent = label;
+    setTimeout(() => { if (dot.textContent === label) dot.textContent = ''; }, 1500);
   } catch (e) {
-    dot.textContent = '⚠ 未能連線伺服器，資料未儲存';
+    dot.textContent = T('syncFail');
   }
 }
 
@@ -546,16 +688,16 @@ async function doLogin() {
       document.getElementById('loginPw').value = '';
       await bootServer();
     } else if (data.error === 'wrong') {
-      msgEl.textContent = `密碼錯誤，剩餘 ${data.remaining} 次機會`;
+      msgEl.textContent = T('pwWrong', data.remaining);
     } else if (data.error === 'locked') {
-      msgEl.textContent = `錯誤次數太多，已鎖定，請 ${Math.ceil(data.seconds / 60)} 分鐘後再試`;
+      msgEl.textContent = T('pwLocked', Math.ceil(data.seconds / 60));
     } else if (data.error === 'hard_locked') {
-      msgEl.textContent = '已鎖死：請在電腦的啟動器視窗按「解鎖」後再登入';
+      msgEl.textContent = T('pwHard');
     } else {
-      msgEl.textContent = '登入失敗，請再試一次';
+      msgEl.textContent = T('loginFail');
     }
   } catch (e) {
-    msgEl.textContent = '無法連線伺服器';
+    msgEl.textContent = T('noServer');
   }
 }
 
@@ -571,7 +713,7 @@ async function bootServer() {
       try {
         const oldRecs = JSON.parse(localStorage.getItem(RECORDS_KEY)) || {};
         if (Object.keys(DB.records).length === 0 && Object.keys(oldRecs).length > 0 &&
-            confirm('偵測到本裝置瀏覽器有舊記錄，要上傳到伺服器嗎？（上傳後所有裝置都看得到）')) {
+            confirm(T('confirmMigrate'))) {
           DB.records = oldRecs;
           if (!DB.settings) {
             DB.settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
@@ -585,7 +727,7 @@ async function bootServer() {
     updatePreview();
     render();
   } catch (e) {
-    showLogin('無法連線伺服器，請確認電腦上的啟動器已開啟');
+    showLogin(T('noServerHint'));
   }
 }
 
@@ -716,9 +858,9 @@ function updatePreview() {
   if (document.getElementById('dayType').value === 'off') {
     const note = document.getElementById('noteInput').value.trim();
     const total = Math.round(-ded * 100) / 100;
-    let html = `休假${note ? '（' + note + '）' : ''}`;
-    if (ded > 0) html += ` − <span style="color:var(--danger)">扣款 ${fmtMoney(ded)}</span>`;
-    html += ` = 本日 <b>${s.currency} ${fmtMoney(total)}</b>`;
+    let html = `${T('pvOff')}${note ? '（' + esc(note) + '）' : ''}`;
+    if (ded > 0) html += ` − <span style="color:var(--danger)">${T('pvDeduct', fmtMoney(ded))}</span>`;
+    html += ` = ${T('pvDay')} <b>${s.currency} ${fmtMoney(total)}</b>`;
     el.innerHTML = html;
     return;
   }
@@ -728,13 +870,13 @@ function updatePreview() {
   if (!start || !end) { el.innerHTML = ''; return; }
   const r = calcDay(start, end, s, ded);
   let mid = '';
-  if (s.payMode === 'daily') mid += `底薪 ${fmtMoney(s.dailyWage)}`;
-  if (r.otHours > 0) mid += `${mid ? ' ＋ ' : ''}<span class="ot">加班 ${r.otHours} 小時（${fmtMoney(r.otPay)}）</span>`;
-  if (ded > 0) mid += `${mid ? ' − ' : '−'}<span style="color:var(--danger)">扣款 ${fmtMoney(ded)}</span>`;
-  if (!mid) mid = '無加班、無扣款';
-  const label = s.payMode === 'monthly' ? '本日加減額' : '本日薪金';
+  if (s.payMode === 'daily') mid += T('pvBase', fmtMoney(s.dailyWage));
+  if (r.otHours > 0) mid += `${mid ? ' ＋ ' : ''}<span class="ot">${T('pvOt', r.otHours, fmtMoney(r.otPay))}</span>`;
+  if (ded > 0) mid += `${mid ? ' − ' : '−'}<span style="color:var(--danger)">${T('pvDeduct', fmtMoney(ded))}</span>`;
+  if (!mid) mid = T('pvNone');
+  const label = s.payMode === 'monthly' ? T('pvDayAdj') : T('pvDayPay');
   const sign = s.payMode === 'monthly' && r.total > 0 ? '+' : '';
-  el.innerHTML = `工作 ${r.actualHours} 小時 → ${mid} = ${label} <b>${sign}${s.currency} ${fmtMoney(r.total)}</b>`;
+  el.innerHTML = T('pvWork', r.actualHours) + `${mid} = ${label} <b>${sign}${s.currency} ${fmtMoney(r.total)}</b>`;
 }
 
 // 編輯模式：editingDate 為正在修改的記錄日期
@@ -752,7 +894,7 @@ function editRecord(date) {
   }
   document.getElementById('noteInput').value = r.note || '';
   document.getElementById('deduction').value = (r.deduction || 0) > 0 ? r.deduction : '';
-  document.getElementById('addBtn').textContent = '更新記錄';
+  document.getElementById('addBtn').textContent = T('updateBtn');
   document.getElementById('cancelEditBtn').style.display = '';
   applyDayTypeVisibility();
   updatePreview();
@@ -764,7 +906,7 @@ function cancelEdit() {
   document.getElementById('deduction').value = '';
   document.getElementById('noteInput').value = '';
   document.getElementById('dayType').value = 'work';
-  document.getElementById('addBtn').textContent = '新增記錄';
+  document.getElementById('addBtn').textContent = T('addBtn');
   document.getElementById('cancelEditBtn').style.display = 'none';
   applyDayTypeVisibility();
   updatePreview();
@@ -775,12 +917,12 @@ function addRecord() {
   const isOff = document.getElementById('dayType').value === 'off';
   const start = document.getElementById('workStart').value;
   const end = document.getElementById('workEnd').value;
-  if (!date) { alert('請選擇日期'); return; }
-  if (!isOff && (!start || !end)) { alert('請輸入上班及下班時間'); return; }
+  if (!date) { alert(T('alertDate')); return; }
+  if (!isOff && (!start || !end)) { alert(T('alertTimes')); return; }
 
   const records = loadRecords();
   if (records[date] && date !== editingDate &&
-      !confirm(date + ' 已有記錄，要覆蓋嗎？')) return;
+      !confirm(T('confirmOverwrite', date))) return;
   // 編輯時改了日期 = 把記錄搬到新日期，舊日期的記錄移除
   if (editingDate && editingDate !== date) delete records[editingDate];
 
@@ -827,7 +969,7 @@ function addRecord() {
 }
 
 function deleteRecord(date) {
-  if (!confirm('確定刪除 ' + date + ' 的記錄？')) return;
+  if (!confirm(T('confirmDelete', date))) return;
   const records = loadRecords();
   delete records[date];
   saveRecords(records);
@@ -878,7 +1020,7 @@ function render() {
   }
 
   const monthly = s.payMode === 'monthly';
-  const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+  const WEEKDAYS = I18N[LANG].weekdays;
   let daySum = 0, otHoursSum = 0, otPaySum = 0, deductSum = 0;
   let workDays = 0, offDays = 0;
   let rows = '', cards = '';
@@ -893,40 +1035,39 @@ function render() {
     if (isOff) offDays++; else workDays++;
     const checked = selectedDates.has(d) ? 'checked' : '';
     const totalCell = (monthly && r.total > 0 ? '+' : '') + fmtMoney(r.total);
-    const timeCell = isOff ? '<span class="off-badge">休假</span>' : `${r.start}–${r.end}`;
+    const timeCell = isOff ? `<span class="off-badge">${T('offBadge')}</span>` : `${r.start}–${r.end}`;
     const noteCell = r.note ? `<span class="note-text">${esc(r.note)}</span>` : '—';
     rows += `<tr>
       <td><input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)"></td>
       <td>${d}</td>
       <td>${timeCell}</td>
-      <td>${r.otHours > 0 ? '<span class="ot-badge">+' + r.otHours + ' 小時</span>' : '—'}</td>
+      <td>${r.otHours > 0 ? '<span class="ot-badge">' + T('otBadge', r.otHours) + '</span>' : '—'}</td>
       <td>${r.otPay > 0 ? fmtMoney(r.otPay) : '—'}</td>
       <td>${ded > 0 ? '<span style="color:var(--danger)">−' + fmtMoney(ded) + '</span>' : '—'}</td>
       <td>${noteCell}</td>
       <td><b>${totalCell}</b></td>
       <td class="row-actions">
-        <button class="mini-btn" onclick="editRecord('${d}')">編輯</button><button class="del-btn" onclick="deleteRecord('${d}')">刪除</button>
+        <button class="mini-btn" onclick="editRecord('${d}')">${T('edit')}</button><button class="del-btn" onclick="deleteRecord('${d}')">${T('del')}</button>
       </td>
     </tr>`;
 
-    const [, mm, dd] = d.split('-');
     const wd = WEEKDAYS[new Date(d + 'T00:00:00').getDay()];
     const amtClass = r.total < 0 ? ' neg' : (r.total === 0 ? ' zero' : '');
-    let sub = isOff ? '<span class="off-badge">休假</span>' : `<span>${r.start}–${r.end}</span>`;
-    if (r.otHours > 0) sub += `<span class="ot">加班 ${r.otHours} 小時 +${fmtMoney(r.otPay)}</span>`;
-    if (ded > 0) sub += `<span class="ded">扣款 −${fmtMoney(ded)}</span>`;
+    let sub = isOff ? `<span class="off-badge">${T('offBadge')}</span>` : `<span>${r.start}–${r.end}</span>`;
+    if (r.otHours > 0) sub += `<span class="ot">${T('cardOt', r.otHours, fmtMoney(r.otPay))}</span>`;
+    if (ded > 0) sub += `<span class="ded">${T('cardDeduct', fmtMoney(ded))}</span>`;
     if (r.note) sub += `<span class="note">📝 ${esc(r.note)}</span>`;
     cards += `<div class="rec-card">
       <input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)">
       <div class="rec-main">
         <div class="rec-top">
-          <span class="rec-date">${parseInt(mm)}月${parseInt(dd)}日（${wd}）</span>
+          <span class="rec-date">${fmtCardDate(d, wd)}</span>
           <span class="rec-amt${amtClass}">${totalCell}</span>
         </div>
         <div class="rec-sub">${sub}</div>
       </div>
-      <button class="rec-edit" onclick="editRecord('${d}')" aria-label="編輯">✎</button>
-      <button class="rec-del" onclick="deleteRecord('${d}')" aria-label="刪除">✕</button>
+      <button class="rec-edit" onclick="editRecord('${d}')" aria-label="${T('edit')}">✎</button>
+      <button class="rec-del" onclick="deleteRecord('${d}')" aria-label="${T('del')}">✕</button>
     </div>`;
   }
 
@@ -938,7 +1079,9 @@ function render() {
     s.currency + ' ' + fmtMoney(Math.round(monthTotal * 100) / 100);
   document.getElementById('monthBreakdown').textContent =
     monthly && dates.length > 0
-      ? `月薪 ${fmtMoney(s.monthlySalary)} ＋ 加班 ${fmtMoney(Math.round(otPaySum * 100) / 100)} − 扣款 ${fmtMoney(Math.round(deductSum * 100) / 100)}`
+      ? T('breakdown', fmtMoney(s.monthlySalary),
+          fmtMoney(Math.round(otPaySum * 100) / 100),
+          fmtMoney(Math.round(deductSum * 100) / 100))
       : '';
   document.getElementById('statDays').textContent = workDays;
   document.getElementById('statOffDays').textContent = offDays;
@@ -948,17 +1091,17 @@ function render() {
 
   const list = document.getElementById('recordList');
   if (dates.length === 0) {
-    list.innerHTML = '<div class="empty">本月尚無記錄，請在上方輸入每日上下班時間。</div>';
+    list.innerHTML = `<div class="empty">${T('empty')}</div>`;
   } else {
     list.innerHTML = `
     <div class="select-bar">
-      <span>已勾選 <b id="selCount">0</b> 天，合計：<span class="sel-total" id="selTotal">${s.currency} 0</span></span>
-      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, true)'>全選</button>
-      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, false)'>清除勾選</button>
-      <span class="sel-hint">勾選日期即可計算那幾天的工資合計</span>
+      <span>${T('selected')} <b id="selCount">0</b> ${T('selTotalSuffix')}<span class="sel-total" id="selTotal">${s.currency} 0</span></span>
+      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, true)'>${T('selectAll')}</button>
+      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, false)'>${T('clearSel')}</button>
+      <span class="sel-hint">${T('selHint')}</span>
     </div>
     <div class="table-wrap" style="overflow-x:auto"><table>
-      <thead><tr><th></th><th>日期</th><th>上下班時間</th><th>加班</th><th>加班費</th><th>扣款</th><th>備註</th><th>${monthly ? '本日加減額' : '本日薪金'}</th><th></th></tr></thead>
+      <thead><tr><th></th><th>${T('thDate')}</th><th>${T('thTime')}</th><th>${T('thOt')}</th><th>${T('thOtPay')}</th><th>${T('thDeduct')}</th><th>${T('thNote')}</th><th>${monthly ? T('thDayAdj') : T('thDayPay')}</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
     <div class="rec-cards">${cards}</div>`;
@@ -975,15 +1118,16 @@ function toggleTheme() {
 function applyTheme(theme) {
   if (theme === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
-    document.getElementById('themeBtn').textContent = '☀️ 淺色';
+    document.getElementById('themeBtn').textContent = T('themeLight');
   } else {
     document.documentElement.removeAttribute('data-theme');
-    document.getElementById('themeBtn').textContent = '🌙 深色';
+    document.getElementById('themeBtn').textContent = T('themeDark');
   }
 }
 
 // 初始化
 (function init() {
+  applyLang();
   loadSettings();
   applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
@@ -1010,7 +1154,7 @@ function applyTheme(theme) {
   render();
 
   if (SERVER_MODE) {
-    showLogin('連線中…');
+    showLogin(T('connecting'));
     bootServer();
     // 切回頁面時自動更新其他裝置的最新資料
     window.addEventListener('focus', refreshData);

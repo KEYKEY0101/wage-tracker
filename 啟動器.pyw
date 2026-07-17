@@ -521,9 +521,9 @@ def run_gui(server, lan_url):
         else:
             show_url(lan_url)
 
-    tk.Radiobutton(mode_frame, text='內網（同 Wi-Fi）', variable=mode_var, value='lan',
+    tk.Radiobutton(mode_frame, text='內網 LAN（同 Wi-Fi）', variable=mode_var, value='lan',
                    command=on_mode, bg='white', font=('Microsoft JhengHei', 10)).pack(side='left')
-    ext_radio = tk.Radiobutton(mode_frame, text='外網（任何網路）', variable=mode_var, value='ext',
+    ext_radio = tk.Radiobutton(mode_frame, text='外網 Remote（任何網路）', variable=mode_var, value='ext',
                                command=on_mode, bg='white', state='disabled',
                                font=('Microsoft JhengHei', 10))
     ext_radio.pack(side='left')
@@ -551,8 +551,8 @@ def run_gui(server, lan_url):
     def open_local():
         webbrowser.open(f'http://localhost:{PORT}/')
 
-    tk.Button(root, text='在電腦瀏覽器開啟', font=('Microsoft JhengHei', 10),
-              command=open_local, width=20).pack(pady=(6, 6))
+    tk.Button(root, text='在電腦瀏覽器開啟 Open in browser', font=('Microsoft JhengHei', 10),
+              command=open_local, width=28).pack(pady=(6, 6))
 
     # 登入鎖定狀態 + 解鎖
     lock_frame = tk.Frame(root, bg='white')
@@ -565,7 +565,7 @@ def run_gui(server, lan_url):
         refresh_lock()
         messagebox.showinfo('解鎖', '已解除鎖定並重設錯誤次數，所有裝置需重新輸入密碼登入。')
 
-    unlock_btn = tk.Button(lock_frame, text='解鎖', font=('Microsoft JhengHei', 10),
+    unlock_btn = tk.Button(lock_frame, text='解鎖 Unlock', font=('Microsoft JhengHei', 10),
                            command=do_unlock)
 
     def refresh_lock():
@@ -597,12 +597,13 @@ def run_gui(server, lan_url):
             messagebox.showerror('錯誤', f'設定開機自動啟動失敗：{e}')
             auto_var.set(is_autostart())
 
-    tk.Checkbutton(root, text='開機自動啟動（重新開機後自動開啟本程式）',
+    tk.Checkbutton(root, text='開機自動啟動 Auto-start on boot',
                    variable=auto_var, command=toggle_auto, bg='white',
                    font=('Microsoft JhengHei', 10)).pack(pady=(0, 4))
 
-    tk.Label(root, text='關閉此視窗後手機將無法連線。\n'
-                        '第一次使用如出現 Windows 防火牆詢問，請按「允許存取」。',
+    tk.Label(root, text='關閉此視窗後手機將無法連線。Closing this window stops the server.\n'
+                        '第一次使用如出現 Windows 防火牆詢問，請按「允許存取」。\n'
+                        'If Windows Firewall asks on first use, click "Allow access".',
              bg='white', fg='#888', font=('Microsoft JhengHei', 9),
              justify='center').pack(pady=(0, 12))
 
