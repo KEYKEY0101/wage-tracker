@@ -1,0 +1,8 @@
+# 個人資料與密碼，絕不上傳
+config.json
+wage_data.json
+auth_state.json
+tokens.json
+
+__pycache__/
+*.pyc

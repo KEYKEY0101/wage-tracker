@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工資記錄計算程式</title>
+<style>
+:root {
+  --bg: #12141a;
+  --bg-card: #1c1f28;
+  --bg-input: #262a36;
+  --border: #333846;
+  --text: #e8eaf0;
+  --text-dim: #9aa0b0;
+  --accent: #4f8cff;
+  --accent-hover: #3a76e8;
+  --success: #3ecf8e;
+  --danger: #ff5c6c;
+  --warning: #ffb84d;
+  --shadow: rgba(0,0,0,0.35);
+}
+[data-theme="light"] {
+  --bg: #f2f4f8;
+  --bg-card: #ffffff;
+  --bg-input: #eef0f5;
+  --border: #d8dce5;
+  --text: #23262e;
+  --text-dim: #6b7280;
+  --accent: #2f6fed;
+  --accent-hover: #1f5cd6;
+  --success: #14a06c;
+  --danger: #e04352;
+  --warning: #d98a1f;
+  --shadow: rgba(0,0,0,0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft JhengHei", "PingFang TC", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 20px;
+}
+.container { max-width: 900px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+header h1 { font-size: 22px; }
+.theme-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.card h2 {
+  font-size: 16px;
+  margin-bottom: 14px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+input, select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 16px; /* 16px 起 iOS 點輸入框才不會自動放大 */
+  font-family: inherit;
+  box-sizing: border-box;
+}
+/* date/time 在手機瀏覽器有固有最小寬度會撐爆欄位，強制可縮小 */
+input[type="date"], input[type="time"], input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 42px;
+}
+.grid > div { min-width: 0; }
+html, body { overflow-x: hidden; }
+input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+}
+button.primary:hover { background: var(--accent-hover); }
+.preview-line {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-dim);
+  min-height: 20px;
+}
+.preview-line b { color: var(--success); }
+.preview-line .ot { color: var(--warning); }
+.month-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.month-bar input[type="month"] { width: auto; }
+.total-display {
+  text-align: center;
+  padding: 10px 0 4px;
+}
+.total-display .amount {
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--success);
+}
+.total-display .label { font-size: 14px; color: var(--text-dim); margin-bottom: 4px; }
+.sub-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.sub-stats span { white-space: nowrap; }
+.sub-stats b { color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 9px 8px; text-align: center; border-bottom: 1px solid var(--border); }
+th { color: var(--text-dim); font-weight: 500; font-size: 13px; }
+td .ot-badge {
+  background: var(--warning);
+  color: #1a1a1a;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.off-badge {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.note-text { color: var(--text-dim); font-style: normal; }
+.rec-sub .note { color: var(--accent); }
+.del-btn {
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+th, td { white-space: nowrap; }
+.del-btn:hover { background: var(--danger); color: #fff; }
+.empty { text-align: center; color: var(--text-dim); padding: 24px 0; font-size: 14px; }
+/* 手機用卡片式記錄（桌面隱藏） */
+.rec-cards { display: none; }
+.rec-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.rec-card input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.rec-main { flex: 1; min-width: 0; }
+.rec-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.rec-date { font-size: 15px; font-weight: 600; }
+.rec-amt { font-size: 17px; font-weight: 700; color: var(--success); white-space: nowrap; }
+.rec-amt.neg { color: var(--danger); }
+.rec-amt.zero { color: var(--text-dim); }
+.rec-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.rec-sub .ot { color: var(--warning); }
+.rec-sub .ded { color: var(--danger); }
+.rec-del, .rec-edit {
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 20px;
+  padding: 8px 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+.rec-del:active { color: var(--danger); }
+.rec-edit { font-size: 18px; }
+.rec-edit:active { color: var(--accent); }
+.btn-col { display: flex; align-items: center; gap: 8px; }
+.row-actions { white-space: nowrap; }
+.row-actions .mini-btn { margin-right: 6px; }
+.select-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.select-bar .sel-total { color: var(--success); font-weight: 700; font-size: 16px; }
+.select-bar .sel-hint { color: var(--text-dim); font-size: 13px; }
+.mini-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+.mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+td input[type="checkbox"], th input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+.add-row { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.add-row .field { flex: 1; min-width: 130px; }
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+.login-card h2 { font-size: 18px; margin-bottom: 18px; justify-content: center; }
+.login-card input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+}
+.login-card button { width: 100%; }
+.login-msg { margin-top: 12px; font-size: 13px; color: var(--danger); min-height: 18px; }
+.sync-dot {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+  z-index: 50;
+}
+@media (max-width: 600px) {
+  body { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
+  header { margin-bottom: 14px; }
+  header h1 { font-size: 19px; }
+  .card { padding: 16px 14px; border-radius: 14px; margin-bottom: 12px; }
+  /* 設定：兩欄排列更省空間 */
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* 窄螢幕下 date/time 內距縮小、置中，避免撐出欄位 */
+  input[type="date"], input[type="time"] {
+    padding-left: 4px;
+    padding-right: 4px;
+    text-align: center;
+  }
+  /* 每日輸入：日期全寬、上下班並排、扣款全寬、按鈕全寬好按 */
+  .add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .add-row .field input { width: 100%; }
+  .add-row .field { min-width: 0; }
+  /* 日期+類型並排、上班+下班並排、備註與扣款全寬 */
+  .add-row .field:nth-child(5) { grid-column: 1 / -1; }
+  .add-row .field:nth-child(6) { grid-column: 1 / -1; }
+  .add-row > div:last-child { grid-column: 1 / -1; }
+  .add-row button.primary { flex: 1; padding: 14px; font-size: 16px; }
+  .add-row #cancelEditBtn { padding: 14px 16px; }
+  /* 月份總覽 */
+  .month-bar { justify-content: center; }
+  .total-display .amount { font-size: 34px; }
+  .sub-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+    text-align: center;
+  }
+  /* 記錄：隱藏表格、改卡片 */
+  .table-wrap { display: none; }
+  .rec-cards { display: flex; flex-direction: column; gap: 10px; }
+  .select-bar { padding: 12px; }
+  .select-bar > span:first-child { width: 100%; }
+  .select-bar .mini-btn { flex: 1; padding: 10px 0; text-align: center; }
+  .select-bar .sel-hint { display: none; }
+  .theme-btn { padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-card">
+    <h2>🔒 請輸入密碼</h2>
+    <input type="password" id="loginPw" inputmode="numeric" autocomplete="current-password"
+           placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="primary" onclick="doLogin()">登入</button>
+    <div class="login-msg" id="loginMsg"></div>
+  </div>
+</div>
+<div class="sync-dot" id="syncDot"></div>
+<div class="container">
+  <header>
+    <h1>💰 工資記錄計算程式</h1>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+  </header>
+
+  <!-- 設定 -->
+  <div class="card">
+    <h2>⚙️ 基本設定</h2>
+    <div class="grid">
+      <div>
+        <label>計薪方式</label>
+        <select id="payMode">
+          <option value="daily">日薪（每日固定薪金）</option>
+          <option value="monthly">月薪（每月固定薪金）</option>
+        </select>
+      </div>
+      <div>
+        <label>貨幣單位（可自行輸入）</label>
+        <input type="text" id="currency" value="HKD" placeholder="例如 HKD / USD / TWD">
+      </div>
+      <div>
+        <label>正常上班時間</label>
+        <input type="time" id="normStart" value="09:00">
+      </div>
+      <div>
+        <label>正常下班時間</label>
+        <input type="time" id="normEnd" value="18:00">
+      </div>
+      <div id="dailyWageField">
+        <label>每日薪金</label>
+        <input type="number" id="dailyWage" value="750" min="0" step="any">
+      </div>
+      <div id="monthlySalaryField" style="display:none">
+        <label>每月薪金</label>
+        <input type="number" id="monthlySalary" value="15000" min="0" step="any">
+      </div>
+      <div>
+        <label>加班每小時薪金</label>
+        <input type="number" id="otRate" value="80" min="0" step="any">
+      </div>
+    </div>
+    <div class="hint">設定會自動儲存。加班時數 = 實際工作時數超出正常時數的部分（例如正常 09:00–18:00，輸入 09:00–20:00 即加班 2 小時）。月薪模式：當月總工資 = 月薪 ＋ 加班費合計 − 扣款合計。</div>
+  </div>
+
+  <!-- 每日輸入 -->
+  <div class="card" id="entryCard">
+    <h2>📝 輸入每日記錄</h2>
+    <div class="add-row">
+      <div class="field">
+        <label>日期</label>
+        <input type="date" id="workDate">
+      </div>
+      <div class="field">
+        <label>類型</label>
+        <select id="dayType" onchange="applyDayTypeVisibility(); updatePreview()">
+          <option value="work">上班</option>
+          <option value="off">休假／假日</option>
+        </select>
+      </div>
+      <div class="field" id="startField">
+        <label>上班時間</label>
+        <input type="time" id="workStart" value="09:00">
+      </div>
+      <div class="field" id="endField">
+        <label>下班時間</label>
+        <input type="time" id="workEnd" value="18:00">
+      </div>
+      <div class="field">
+        <label>備註（自由填寫，可留空）</label>
+        <input type="text" id="noteInput" placeholder="例如：有事請假、代班…" maxlength="50">
+      </div>
+      <div class="field">
+        <label>扣款金額（請假／遲到早退，可留空）</label>
+        <input type="number" id="deduction" placeholder="0" min="0" step="any">
+      </div>
+      <div class="btn-col">
+        <button class="primary" id="addBtn" onclick="addRecord()">新增記錄</button>
+        <button class="mini-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none">取消編輯</button>
+      </div>
+    </div>
+    <div class="preview-line" id="previewLine"></div>
+  </div>
+
+  <!-- 月份總覽 -->
+  <div class="card">
+    <h2>📅 月份總覽</h2>
+    <div class="month-bar">
+      <label style="margin:0">選擇月份：</label>
+      <input type="month" id="monthPicker" onchange="render()">
+    </div>
+    <div class="total-display">
+      <div class="label">當月總工資</div>
+      <div class="amount" id="monthTotal">HKD 0</div>
+      <div class="label" id="monthBreakdown" style="margin-top:4px"></div>
+      <div class="sub-stats">
+        <span>出勤天數：<b id="statDays">0</b> 天</span>
+        <span>休假天數：<b id="statOffDays">0</b> 天</span>
+        <span>加班總時數：<b id="statOtHours">0</b> 小時</span>
+        <span>加班費合計：<b id="statOtPay">0</b></span>
+        <span>扣款合計：<b id="statDeduct">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 記錄列表 -->
+  <div class="card">
+    <h2>📋 當月記錄</h2>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<script>
+const SETTINGS_KEY = 'wageCalcSettings';
+const RECORDS_KEY = 'wageCalcRecords';
+const THEME_KEY = 'appTheme';
+const TOKEN_KEY = 'wageToken';
+
+// 經啟動器伺服器開啟時，資料集中存在電腦；直接開 HTML 檔案時仍用瀏覽器儲存
+const SERVER_MODE = location.protocol === 'http:' || location.protocol === 'https:';
+let DB = { settings: null, records: {} };
+let syncTimer = null;
+let migrationChecked = false;
+
+function authHeaders() {
+  return { 'X-Token': localStorage.getItem(TOKEN_KEY) || '' };
+}
+
+function scheduleSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 500);
+}
+
+async function syncNow() {
+  syncTimer = null;
+  const dot = document.getElementById('syncDot');
+  try {
+    const res = await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(DB)
+    });
+    if (res.status === 401) { showLogin('登入已失效，請重新輸入密碼'); return; }
+    dot.textContent = '已儲存 ✓';
+    setTimeout(() => { if (dot.textContent === '已儲存 ✓') dot.textContent = ''; }, 1500);
+  } catch (e) {
+    dot.textContent = '⚠ 未能連線伺服器，資料未儲存';
+  }
+}
+
+function showLogin(msg) {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginMsg').textContent = msg || '';
+  document.getElementById('loginPw').focus();
+}
+
+function hideLogin() {
+  document.getElementById('loginOverlay').style.display = 'none';
+}
+
+async function doLogin() {
+  const pw = document.getElementById('loginPw').value;
+  const msgEl = document.getElementById('loginMsg');
+  if (!pw) return;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+      document.getElementById('loginPw').value = '';
+      await bootServer();
+    } else if (data.error === 'wrong') {
+      msgEl.textContent = `密碼錯誤，剩餘 ${data.remaining} 次機會`;
+    } else if (data.error === 'locked') {
+      msgEl.textContent = `錯誤次數太多，已鎖定，請 ${Math.ceil(data.seconds / 60)} 分鐘後再試`;
+    } else if (data.error === 'hard_locked') {
+      msgEl.textContent = '已鎖死：請在電腦的啟動器視窗按「解鎖」後再登入';
+    } else {
+      msgEl.textContent = '登入失敗，請再試一次';
+    }
+  } catch (e) {
+    msgEl.textContent = '無法連線伺服器';
+  }
+}
+
+async function bootServer() {
+  try {
+    const res = await fetch('/api/data', { headers: authHeaders() });
+    if (res.status === 401) { showLogin(''); return; }
+    DB = await res.json();
+    if (!DB.records) DB.records = {};
+    // 一次性搬移：伺服器沒資料而本裝置瀏覽器有舊記錄時詢問上傳
+    if (!migrationChecked) {
+      migrationChecked = true;
+      try {
+        const oldRecs = JSON.parse(localStorage.getItem(RECORDS_KEY)) || {};
+        if (Object.keys(DB.records).length === 0 && Object.keys(oldRecs).length > 0 &&
+            confirm('偵測到本裝置瀏覽器有舊記錄，要上傳到伺服器嗎？（上傳後所有裝置都看得到）')) {
+          DB.records = oldRecs;
+          if (!DB.settings) {
+            DB.settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+          }
+          scheduleSync();
+        }
+      } catch (e) { console.warn('搬移舊記錄失敗', e); }
+    }
+    hideLogin();
+    loadSettings();
+    updatePreview();
+    render();
+  } catch (e) {
+    showLogin('無法連線伺服器，請確認電腦上的啟動器已開啟');
+  }
+}
+
+async function refreshData() {
+  if (!SERVER_MODE || syncTimer) return;
+  try {
+    const res = await fetch('/api/data', { headers: authHeaders() });
+    if (!res.ok) return;
+    DB = await res.json();
+    if (!DB.records) DB.records = {};
+    loadSettings();
+    render();
+  } catch (e) { /* 離線時忽略，下次聚焦再試 */ }
+}
+
+function getStoredSettings() {
+  if (SERVER_MODE) return DB.settings;
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)); }
+  catch (e) { console.warn('載入設定失敗', e); return null; }
+}
+
+function loadSettings() {
+  const s = getStoredSettings();
+  if (s) {
+    document.getElementById('payMode').value = s.payMode ?? 'daily';
+    document.getElementById('currency').value = s.currency ?? 'HKD';
+    document.getElementById('normStart').value = s.normStart ?? '09:00';
+    document.getElementById('normEnd').value = s.normEnd ?? '18:00';
+    document.getElementById('dailyWage').value = s.dailyWage ?? 750;
+    document.getElementById('monthlySalary').value = s.monthlySalary ?? 15000;
+    document.getElementById('otRate').value = s.otRate ?? 80;
+  }
+  applyModeVisibility();
+}
+
+function applyModeVisibility() {
+  const monthly = document.getElementById('payMode').value === 'monthly';
+  document.getElementById('dailyWageField').style.display = monthly ? 'none' : '';
+  document.getElementById('monthlySalaryField').style.display = monthly ? '' : 'none';
+}
+
+function saveSettings() {
+  const s = getSettings();
+  if (SERVER_MODE) {
+    DB.settings = s;
+    scheduleSync();
+  } else {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }
+}
+
+function getSettings() {
+  return {
+    payMode: document.getElementById('payMode').value,
+    currency: document.getElementById('currency').value.trim() || 'HKD',
+    normStart: document.getElementById('normStart').value || '09:00',
+    normEnd: document.getElementById('normEnd').value || '18:00',
+    dailyWage: parseFloat(document.getElementById('dailyWage').value) || 0,
+    monthlySalary: parseFloat(document.getElementById('monthlySalary').value) || 0,
+    otRate: parseFloat(document.getElementById('otRate').value) || 0
+  };
+}
+
+function loadRecords() {
+  if (SERVER_MODE) return DB.records || {};
+  try { return JSON.parse(localStorage.getItem(RECORDS_KEY)) || {}; }
+  catch (e) { console.warn('載入記錄失敗', e); return {}; }
+}
+
+function saveRecords(records) {
+  if (SERVER_MODE) {
+    DB.records = records;
+    scheduleSync();
+  } else {
+    localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+  }
+}
+
+// 時間字串轉分鐘數
+function toMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// 計算工作時數（跨午夜自動 +24 小時）
+function workedHours(start, end) {
+  let diff = toMinutes(end) - toMinutes(start);
+  if (diff < 0) diff += 24 * 60;
+  return diff / 60;
+}
+
+// 依設定計算某天的薪金明細（月薪模式底薪計 0，底薪在月結時一次加入）
+function calcDay(start, end, s, deduction = 0) {
+  const normalHours = workedHours(s.normStart, s.normEnd);
+  const actualHours = workedHours(start, end);
+  const otHours = Math.max(0, Math.round((actualHours - normalHours) * 100) / 100);
+  const otPay = Math.round(otHours * s.otRate * 100) / 100;
+  const base = s.payMode === 'monthly' ? 0 : s.dailyWage;
+  const total = Math.round((base + otPay - deduction) * 100) / 100;
+  return { actualHours, otHours, otPay, base, total };
+}
+
+function fmtMoney(n) {
+  return n.toLocaleString('zh-Hant', { maximumFractionDigits: 2 });
+}
+
+// 備註是使用者自由輸入，顯示前轉義避免破壞版面
+function esc(t) {
+  return String(t).replace(/[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function getDeductionInput() {
+  return Math.max(0, parseFloat(document.getElementById('deduction').value) || 0);
+}
+
+function applyDayTypeVisibility() {
+  const off = document.getElementById('dayType').value === 'off';
+  document.getElementById('startField').style.display = off ? 'none' : '';
+  document.getElementById('endField').style.display = off ? 'none' : '';
+}
+
+function updatePreview() {
+  const el = document.getElementById('previewLine');
+  const s = getSettings();
+  const ded = getDeductionInput();
+
+  if (document.getElementById('dayType').value === 'off') {
+    const note = document.getElementById('noteInput').value.trim();
+    const total = Math.round(-ded * 100) / 100;
+    let html = `休假${note ? '（' + note + '）' : ''}`;
+    if (ded > 0) html += ` − <span style="color:var(--danger)">扣款 ${fmtMoney(ded)}</span>`;
+    html += ` = 本日 <b>${s.currency} ${fmtMoney(total)}</b>`;
+    el.innerHTML = html;
+    return;
+  }
+
+  const start = document.getElementById('workStart').value;
+  const end = document.getElementById('workEnd').value;
+  if (!start || !end) { el.innerHTML = ''; return; }
+  const r = calcDay(start, end, s, ded);
+  let mid = '';
+  if (s.payMode === 'daily') mid += `底薪 ${fmtMoney(s.dailyWage)}`;
+  if (r.otHours > 0) mid += `${mid ? ' ＋ ' : ''}<span class="ot">加班 ${r.otHours} 小時（${fmtMoney(r.otPay)}）</span>`;
+  if (ded > 0) mid += `${mid ? ' − ' : '−'}<span style="color:var(--danger)">扣款 ${fmtMoney(ded)}</span>`;
+  if (!mid) mid = '無加班、無扣款';
+  const label = s.payMode === 'monthly' ? '本日加減額' : '本日薪金';
+  const sign = s.payMode === 'monthly' && r.total > 0 ? '+' : '';
+  el.innerHTML = `工作 ${r.actualHours} 小時 → ${mid} = ${label} <b>${sign}${s.currency} ${fmtMoney(r.total)}</b>`;
+}
+
+// 編輯模式：editingDate 為正在修改的記錄日期
+let editingDate = null;
+
+function editRecord(date) {
+  const r = loadRecords()[date];
+  if (!r) return;
+  editingDate = date;
+  document.getElementById('workDate').value = date;
+  document.getElementById('dayType').value = r.type === 'off' ? 'off' : 'work';
+  if (r.type !== 'off') {
+    document.getElementById('workStart').value = r.start;
+    document.getElementById('workEnd').value = r.end;
+  }
+  document.getElementById('noteInput').value = r.note || '';
+  document.getElementById('deduction').value = (r.deduction || 0) > 0 ? r.deduction : '';
+  document.getElementById('addBtn').textContent = '更新記錄';
+  document.getElementById('cancelEditBtn').style.display = '';
+  applyDayTypeVisibility();
+  updatePreview();
+  document.getElementById('entryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEdit() {
+  editingDate = null;
+  document.getElementById('deduction').value = '';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('dayType').value = 'work';
+  document.getElementById('addBtn').textContent = '新增記錄';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  applyDayTypeVisibility();
+  updatePreview();
+}
+
+function addRecord() {
+  const date = document.getElementById('workDate').value;
+  const isOff = document.getElementById('dayType').value === 'off';
+  const start = document.getElementById('workStart').value;
+  const end = document.getElementById('workEnd').value;
+  if (!date) { alert('請選擇日期'); return; }
+  if (!isOff && (!start || !end)) { alert('請輸入上班及下班時間'); return; }
+
+  const records = loadRecords();
+  if (records[date] && date !== editingDate &&
+      !confirm(date + ' 已有記錄，要覆蓋嗎？')) return;
+  // 編輯時改了日期 = 把記錄搬到新日期，舊日期的記錄移除
+  if (editingDate && editingDate !== date) delete records[editingDate];
+
+  const s = getSettings();
+  const ded = getDeductionInput();
+  const note = document.getElementById('noteInput').value.trim();
+
+  if (isOff) {
+    records[date] = {
+      type: 'off',
+      note,
+      start: '', end: '',
+      payMode: s.payMode,
+      base: 0,
+      otHours: 0,
+      otRate: s.otRate,
+      otPay: 0,
+      deduction: ded,
+      total: Math.round(-ded * 100) / 100,
+      currency: s.currency
+    };
+  } else {
+    const r = calcDay(start, end, s, ded);
+    records[date] = {
+      type: 'work',
+      note,
+      start, end,
+      payMode: s.payMode,
+      base: r.base,
+      otHours: r.otHours,
+      otRate: s.otRate,
+      otPay: r.otPay,
+      deduction: ded,
+      total: r.total,
+      currency: s.currency
+    };
+  }
+  saveRecords(records);
+
+  // 結束編輯狀態（會清空扣款欄位）並切換月份顯示到剛輸入的日期所屬月份
+  cancelEdit();
+  document.getElementById('monthPicker').value = date.slice(0, 7);
+  render();
+}
+
+function deleteRecord(date) {
+  if (!confirm('確定刪除 ' + date + ' 的記錄？')) return;
+  const records = loadRecords();
+  delete records[date];
+  saveRecords(records);
+  if (editingDate === date) cancelEdit();
+  render();
+}
+
+// 手動勾選的日期（不儲存，重新整理後清空）
+const selectedDates = new Set();
+
+function toggleSelect(date, checked) {
+  if (checked) selectedDates.add(date);
+  else selectedDates.delete(date);
+  updateSelectBar();
+}
+
+function selectAll(dates, check) {
+  for (const d of dates) {
+    if (check) selectedDates.add(d);
+    else selectedDates.delete(d);
+  }
+  render();
+}
+
+function updateSelectBar() {
+  const records = loadRecords();
+  const s = getSettings();
+  let sum = 0, count = 0;
+  for (const d of selectedDates) {
+    if (records[d]) { sum += records[d].total; count++; }
+  }
+  const el = document.getElementById('selTotal');
+  if (el) {
+    el.textContent = s.currency + ' ' + fmtMoney(Math.round(sum * 100) / 100);
+    document.getElementById('selCount').textContent = count;
+  }
+}
+
+function render() {
+  const month = document.getElementById('monthPicker').value;
+  const records = loadRecords();
+  const s = getSettings();
+  const dates = Object.keys(records).filter(d => d.startsWith(month)).sort();
+
+  // 清掉已被刪除的勾選日期
+  for (const d of [...selectedDates]) {
+    if (!records[d]) selectedDates.delete(d);
+  }
+
+  const monthly = s.payMode === 'monthly';
+  const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+  let daySum = 0, otHoursSum = 0, otPaySum = 0, deductSum = 0;
+  let workDays = 0, offDays = 0;
+  let rows = '', cards = '';
+  for (const d of dates) {
+    const r = records[d];
+    const isOff = r.type === 'off';
+    const ded = r.deduction || 0;
+    daySum += r.total;
+    otHoursSum += r.otHours;
+    otPaySum += r.otPay;
+    deductSum += ded;
+    if (isOff) offDays++; else workDays++;
+    const checked = selectedDates.has(d) ? 'checked' : '';
+    const totalCell = (monthly && r.total > 0 ? '+' : '') + fmtMoney(r.total);
+    const timeCell = isOff ? '<span class="off-badge">休假</span>' : `${r.start}–${r.end}`;
+    const noteCell = r.note ? `<span class="note-text">${esc(r.note)}</span>` : '—';
+    rows += `<tr>
+      <td><input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)"></td>
+      <td>${d}</td>
+      <td>${timeCell}</td>
+      <td>${r.otHours > 0 ? '<span class="ot-badge">+' + r.otHours + ' 小時</span>' : '—'}</td>
+      <td>${r.otPay > 0 ? fmtMoney(r.otPay) : '—'}</td>
+      <td>${ded > 0 ? '<span style="color:var(--danger)">−' + fmtMoney(ded) + '</span>' : '—'}</td>
+      <td>${noteCell}</td>
+      <td><b>${totalCell}</b></td>
+      <td class="row-actions">
+        <button class="mini-btn" onclick="editRecord('${d}')">編輯</button><button class="del-btn" onclick="deleteRecord('${d}')">刪除</button>
+      </td>
+    </tr>`;
+
+    const [, mm, dd] = d.split('-');
+    const wd = WEEKDAYS[new Date(d + 'T00:00:00').getDay()];
+    const amtClass = r.total < 0 ? ' neg' : (r.total === 0 ? ' zero' : '');
+    let sub = isOff ? '<span class="off-badge">休假</span>' : `<span>${r.start}–${r.end}</span>`;
+    if (r.otHours > 0) sub += `<span class="ot">加班 ${r.otHours} 小時 +${fmtMoney(r.otPay)}</span>`;
+    if (ded > 0) sub += `<span class="ded">扣款 −${fmtMoney(ded)}</span>`;
+    if (r.note) sub += `<span class="note">📝 ${esc(r.note)}</span>`;
+    cards += `<div class="rec-card">
+      <input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)">
+      <div class="rec-main">
+        <div class="rec-top">
+          <span class="rec-date">${parseInt(mm)}月${parseInt(dd)}日（${wd}）</span>
+          <span class="rec-amt${amtClass}">${totalCell}</span>
+        </div>
+        <div class="rec-sub">${sub}</div>
+      </div>
+      <button class="rec-edit" onclick="editRecord('${d}')" aria-label="編輯">✎</button>
+      <button class="rec-del" onclick="deleteRecord('${d}')" aria-label="刪除">✕</button>
+    </div>`;
+  }
+
+  // 月薪模式：有記錄的月份才計入月薪底薪
+  const monthTotal = monthly
+    ? (dates.length > 0 ? s.monthlySalary + daySum : 0)
+    : daySum;
+  document.getElementById('monthTotal').textContent =
+    s.currency + ' ' + fmtMoney(Math.round(monthTotal * 100) / 100);
+  document.getElementById('monthBreakdown').textContent =
+    monthly && dates.length > 0
+      ? `月薪 ${fmtMoney(s.monthlySalary)} ＋ 加班 ${fmtMoney(Math.round(otPaySum * 100) / 100)} − 扣款 ${fmtMoney(Math.round(deductSum * 100) / 100)}`
+      : '';
+  document.getElementById('statDays').textContent = workDays;
+  document.getElementById('statOffDays').textContent = offDays;
+  document.getElementById('statOtHours').textContent = Math.round(otHoursSum * 100) / 100;
+  document.getElementById('statOtPay').textContent = fmtMoney(Math.round(otPaySum * 100) / 100);
+  document.getElementById('statDeduct').textContent = fmtMoney(Math.round(deductSum * 100) / 100);
+
+  const list = document.getElementById('recordList');
+  if (dates.length === 0) {
+    list.innerHTML = '<div class="empty">本月尚無記錄，請在上方輸入每日上下班時間。</div>';
+  } else {
+    list.innerHTML = `
+    <div class="select-bar">
+      <span>已勾選 <b id="selCount">0</b> 天，合計：<span class="sel-total" id="selTotal">${s.currency} 0</span></span>
+      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, true)'>全選</button>
+      <button class="mini-btn" onclick='selectAll(${JSON.stringify(dates)}, false)'>清除勾選</button>
+      <span class="sel-hint">勾選日期即可計算那幾天的工資合計</span>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto"><table>
+      <thead><tr><th></th><th>日期</th><th>上下班時間</th><th>加班</th><th>加班費</th><th>扣款</th><th>備註</th><th>${monthly ? '本日加減額' : '本日薪金'}</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="rec-cards">${cards}</div>`;
+    updateSelectBar();
+  }
+}
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(cur);
+  localStorage.setItem(THEME_KEY, cur);
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('themeBtn').textContent = '☀️ 淺色';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeBtn').textContent = '🌙 深色';
+  }
+}
+
+// 初始化
+(function init() {
+  loadSettings();
+  applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+  const today = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  document.getElementById('workDate').value = todayStr;
+  document.getElementById('monthPicker').value = todayStr.slice(0, 7);
+
+  // 設定變更時自動儲存並更新畫面
+  for (const id of ['payMode', 'currency', 'normStart', 'normEnd', 'dailyWage', 'monthlySalary', 'otRate']) {
+    document.getElementById(id).addEventListener('change', () => {
+      applyModeVisibility();
+      saveSettings();
+      updatePreview();
+      render();
+    });
+  }
+  for (const id of ['workStart', 'workEnd', 'deduction', 'noteInput']) {
+    document.getElementById(id).addEventListener('input', updatePreview);
+  }
+
+  updatePreview();
+  render();
+
+  if (SERVER_MODE) {
+    showLogin('連線中…');
+    bootServer();
+    // 切回頁面時自動更新其他裝置的最新資料
+    window.addEventListener('focus', refreshData);
+  }
+})();
+</script>
+</body>
+</html>
