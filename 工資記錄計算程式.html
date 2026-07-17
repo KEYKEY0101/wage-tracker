@@ -18,6 +18,10 @@
   --danger: #ff5c6c;
   --warning: #ffb84d;
   --shadow: rgba(0,0,0,0.35);
+  --flag-red-bg: rgba(255, 92, 108, 0.13);
+  --flag-red-border: rgba(255, 92, 108, 0.45);
+  --flag-green-bg: rgba(62, 207, 142, 0.13);
+  --flag-green-border: rgba(62, 207, 142, 0.45);
 }
 [data-theme="light"] {
   --bg: #f2f4f8;
@@ -200,6 +204,17 @@ td .ot-badge {
   padding: 2px 8px;
   font-size: 12px;
   white-space: nowrap;
+}
+/* 記錄背景標色：紅＝遲到／早退，綠＝加班 */
+tr.flag-red td { background: var(--flag-red-bg); }
+tr.flag-green td { background: var(--flag-green-bg); }
+.rec-card.flag-red {
+  background: var(--flag-red-bg);
+  border-color: var(--flag-red-border);
+}
+.rec-card.flag-green {
+  background: var(--flag-green-bg);
+  border-color: var(--flag-green-border);
 }
 .note-text { color: var(--text-dim); font-style: normal; }
 .rec-sub .note { color: var(--accent); }
@@ -558,7 +573,9 @@ const I18N = {
     entryTitle: '📝 輸入每日記錄',
     date: '日期', type: '類型', optWork: '上班', optLate: '遲到', optOff: '休假／假日',
     lateBadge: '遲到', lateBadgeMin: '遲到 {0} 分',
+    earlyBadgeMin: '早退 {0} 分',
     pvLate: '⚠ 比正常上班時間晚 {0} 分鐘',
+    pvEarly: '⚠ 比正常下班時間早 {0} 分鐘',
     statLate: '遲到次數：', unitTimes: ' 次',
     start: '上班時間', end: '下班時間',
     note: '備註（自由填寫，可留空）', notePh: '例如：有事請假、代班…',
@@ -611,7 +628,9 @@ const I18N = {
     entryTitle: '📝 Daily Entry',
     date: 'Date', type: 'Type', optWork: 'Work day', optLate: 'Late', optOff: 'Day off',
     lateBadge: 'Late', lateBadgeMin: 'Late {0} min',
+    earlyBadgeMin: 'Left early {0} min',
     pvLate: '⚠ {0} min later than normal start',
+    pvEarly: '⚠ {0} min earlier than normal end',
     statLate: 'Late days: ', unitTimes: '',
     start: 'Start time', end: 'End time',
     note: 'Note (optional)', notePh: 'e.g. sick leave, covering a shift…',
@@ -891,6 +910,13 @@ function lateMinutes(start, s) {
   return Math.max(0, toMinutes(start) - toMinutes(s.normStart));
 }
 
+// 早退分鐘數：實際下班時間比正常下班時間早多少（跨午夜＝做到半夜，不算早退）
+function earlyLeaveMinutes(start, end, s) {
+  if (!start || !end) return 0;
+  if (toMinutes(end) < toMinutes(start)) return 0;
+  return Math.max(0, toMinutes(s.normEnd) - toMinutes(end));
+}
+
 // 依設定計算某天的薪金明細
 // 日薪：底薪固定；月薪：底薪計 0（月結時一次加入）；時薪：正常時數 × 時薪
 function calcDay(start, end, s, deduction = 0) {
@@ -947,13 +973,18 @@ function updatePreview() {
     return;
   }
 
-  // 遲到提示：類型選了遲到，或上班時間比正常晚
+  // 遲到／早退提示：類型選了遲到，或上下班時間跟正常時間不符
   const typeVal = document.getElementById('dayType').value;
   const startVal = document.getElementById('workStart').value;
+  const endVal = document.getElementById('workEnd').value;
   const lm = lateMinutes(startVal, s);
+  const em = earlyLeaveMinutes(startVal, endVal, s);
   let lateHint = '';
   if (typeVal === 'late' || lm > 0) {
-    lateHint = ` <span style="color:var(--danger)">${lm > 0 ? T('pvLate', lm) : '⚠ ' + T('lateBadge')}</span>`;
+    lateHint += ` <span style="color:var(--danger)">${lm > 0 ? T('pvLate', lm) : '⚠ ' + T('lateBadge')}</span>`;
+  }
+  if (em > 0) {
+    lateHint += ` <span style="color:var(--danger)">${T('pvEarly', em)}</span>`;
   }
 
   if (s.payMode === 'manual') {
@@ -1063,6 +1094,7 @@ function addRecord() {
       note,
       start, end,
       lateMin: lateMinutes(start, s),
+      earlyMin: earlyLeaveMinutes(start, end, s),
       payMode: s.payMode,
       base: amt,
       otHours: 0,
@@ -1079,6 +1111,7 @@ function addRecord() {
       note,
       start, end,
       lateMin: lateMinutes(start, s),
+      earlyMin: earlyLeaveMinutes(start, end, s),
       payMode: s.payMode,
       base: r.base,
       otHours: r.otHours,
@@ -1157,6 +1190,7 @@ function render() {
     const r = records[d];
     const isOff = r.type === 'off';
     const isLate = !isOff && (r.type === 'late' || (r.lateMin || 0) > 0);
+    const isEarly = !isOff && (r.earlyMin || 0) > 0;
     const ded = r.deduction || 0;
     daySum += r.total;
     otHoursSum += r.otHours;
@@ -1164,15 +1198,20 @@ function render() {
     deductSum += ded;
     if (isOff) offDays++; else workDays++;
     if (isLate) lateDays++;
-    const lateTag = isLate
+    let lateTag = isLate
       ? `<span class="late-badge">${(r.lateMin || 0) > 0 ? T('lateBadgeMin', r.lateMin) : T('lateBadge')}</span>`
       : '';
+    if (isEarly) {
+      lateTag += `${lateTag ? ' ' : ''}<span class="late-badge">${T('earlyBadgeMin', r.earlyMin)}</span>`;
+    }
+    // 背景標色：紅＝遲到／早退，綠＝有加班
+    const flagClass = (isLate || isEarly) ? 'flag-red' : (r.otHours > 0 ? 'flag-green' : '');
     const checked = selectedDates.has(d) ? 'checked' : '';
     const totalCell = (monthly && r.total > 0 ? '+' : '') + fmtMoney(r.total);
     const timeCell = (isOff ? `<span class="off-badge">${T('offBadge')}</span>`
       : (r.start && r.end ? `${r.start}–${r.end}` : '—')) + (lateTag ? ' ' + lateTag : '');
     const noteCell = r.note ? `<span class="note-text">${esc(r.note)}</span>` : '—';
-    rows += `<tr>
+    rows += `<tr class="${flagClass}">
       <td><input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)"></td>
       <td>${d}</td>
       <td>${timeCell}</td>
@@ -1194,7 +1233,7 @@ function render() {
     if (r.otHours > 0) sub += `<span class="ot">${T('cardOt', r.otHours, fmtMoney(r.otPay))}</span>`;
     if (ded > 0) sub += `<span class="ded">${T('cardDeduct', fmtMoney(ded))}</span>`;
     if (r.note) sub += `<span class="note">📝 ${esc(r.note)}</span>`;
-    cards += `<div class="rec-card">
+    cards += `<div class="rec-card ${flagClass}">
       <input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)">
       <div class="rec-main">
         <div class="rec-top">
