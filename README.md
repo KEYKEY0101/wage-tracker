@@ -17,6 +17,7 @@ A self-hosted wage tracking app. Record your daily work hours, overtime, leave d
   - *Manual*: type each day's amount yourself (no automatic calculation)
 - **Overtime** — hours beyond your normal schedule are paid at a separate hourly rate (e.g. work `09:00`–`20:00` with a `09:00`–`18:00` schedule = 2 h overtime)
 - **Leave / holiday records** — mark a day as a day off with a free-text note (e.g. "sick leave"), with an optional deduction amount
+- **Lateness tracking** — a "Late" day type, plus automatic detection: if your start time is later than your normal schedule, the entry is flagged with the minutes late and counted in a monthly late-days stat
 - **Deductions** — optional amount per day for leave, lateness or early departure
 - **Custom currency** — type any currency label (HKD, USD, TWD, …)
 - **Monthly overview** — total wage, work days, leave days, overtime hours and totals
@@ -93,6 +94,7 @@ Back up `wage_data.json` to keep your records safe.
 
 ## Version
 
+- **1.4** — "Late" day type with automatic lateness detection and a monthly late-days stat
 - **1.3** — collapsible settings panel (tap the header to expand/collapse, state remembered)
 - **1.2** — two new pay modes: hourly wage and manual daily amount
 - **1.1** — bilingual UI (English / 繁體中文) with one-tap language switch

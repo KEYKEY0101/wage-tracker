@@ -193,6 +193,14 @@ td .ot-badge {
   font-size: 12px;
   white-space: nowrap;
 }
+.late-badge {
+  background: var(--danger);
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 .note-text { color: var(--text-dim); font-style: normal; }
 .rec-sub .note { color: var(--accent); }
 .del-btn {
@@ -463,6 +471,7 @@ td input[type="checkbox"], th input[type="checkbox"] {
         <label data-i18n="type">類型</label>
         <select id="dayType" onchange="applyDayTypeVisibility(); updatePreview()">
           <option value="work" data-i18n="optWork">上班</option>
+          <option value="late" data-i18n="optLate">遲到</option>
           <option value="off" data-i18n="optOff">休假／假日</option>
         </select>
       </div>
@@ -508,6 +517,7 @@ td input[type="checkbox"], th input[type="checkbox"] {
       <div class="sub-stats">
         <span><span data-i18n="statWork">出勤天數：</span><b id="statDays">0</b><span data-i18n="unitDays"> 天</span></span>
         <span><span data-i18n="statOff">休假天數：</span><b id="statOffDays">0</b><span data-i18n="unitDays"> 天</span></span>
+        <span><span data-i18n="statLate">遲到次數：</span><b id="statLateDays">0</b><span data-i18n="unitTimes"> 次</span></span>
         <span><span data-i18n="statOtH">加班總時數：</span><b id="statOtHours">0</b><span data-i18n="unitHours"> 小時</span></span>
         <span><span data-i18n="statOtPay">加班費合計：</span><b id="statOtPay">0</b></span>
         <span><span data-i18n="statDeduct">扣款合計：</span><b id="statDeduct">0</b></span>
@@ -546,7 +556,10 @@ const I18N = {
     alertManual: '請輸入本日薪金',
     pvHourly: '正常 {0} 小時（{1}）', pvManual: '手動輸入 {0}',
     entryTitle: '📝 輸入每日記錄',
-    date: '日期', type: '類型', optWork: '上班', optOff: '休假／假日',
+    date: '日期', type: '類型', optWork: '上班', optLate: '遲到', optOff: '休假／假日',
+    lateBadge: '遲到', lateBadgeMin: '遲到 {0} 分',
+    pvLate: '⚠ 比正常上班時間晚 {0} 分鐘',
+    statLate: '遲到次數：', unitTimes: ' 次',
     start: '上班時間', end: '下班時間',
     note: '備註（自由填寫，可留空）', notePh: '例如：有事請假、代班…',
     deduction: '扣款金額（請假／遲到早退，可留空）',
@@ -596,7 +609,10 @@ const I18N = {
     alertManual: 'Please enter the day\'s pay',
     pvHourly: 'regular {0} h ({1})', pvManual: 'manual {0}',
     entryTitle: '📝 Daily Entry',
-    date: 'Date', type: 'Type', optWork: 'Work day', optOff: 'Day off',
+    date: 'Date', type: 'Type', optWork: 'Work day', optLate: 'Late', optOff: 'Day off',
+    lateBadge: 'Late', lateBadgeMin: 'Late {0} min',
+    pvLate: '⚠ {0} min later than normal start',
+    statLate: 'Late days: ', unitTimes: '',
     start: 'Start time', end: 'End time',
     note: 'Note (optional)', notePh: 'e.g. sick leave, covering a shift…',
     deduction: 'Deduction (leave / lateness, optional)',
@@ -869,6 +885,12 @@ function workedHours(start, end) {
   return diff / 60;
 }
 
+// 遲到分鐘數：實際上班時間比正常上班時間晚多少
+function lateMinutes(start, s) {
+  if (!start) return 0;
+  return Math.max(0, toMinutes(start) - toMinutes(s.normStart));
+}
+
 // 依設定計算某天的薪金明細
 // 日薪：底薪固定；月薪：底薪計 0（月結時一次加入）；時薪：正常時數 × 時薪
 function calcDay(start, end, s, deduction = 0) {
@@ -925,12 +947,21 @@ function updatePreview() {
     return;
   }
 
+  // 遲到提示：類型選了遲到，或上班時間比正常晚
+  const typeVal = document.getElementById('dayType').value;
+  const startVal = document.getElementById('workStart').value;
+  const lm = lateMinutes(startVal, s);
+  let lateHint = '';
+  if (typeVal === 'late' || lm > 0) {
+    lateHint = ` <span style="color:var(--danger)">${lm > 0 ? T('pvLate', lm) : '⚠ ' + T('lateBadge')}</span>`;
+  }
+
   if (s.payMode === 'manual') {
     const amt = Math.max(0, parseFloat(document.getElementById('manualPay').value) || 0);
     const total = Math.round((amt - ded) * 100) / 100;
     let html = T('pvManual', fmtMoney(amt));
     if (ded > 0) html += ` − <span style="color:var(--danger)">${T('pvDeduct', fmtMoney(ded))}</span>`;
-    html += ` = ${T('pvDayPay')} <b>${s.currency} ${fmtMoney(total)}</b>`;
+    html += ` = ${T('pvDayPay')} <b>${s.currency} ${fmtMoney(total)}</b>` + lateHint;
     el.innerHTML = html;
     return;
   }
@@ -947,7 +978,7 @@ function updatePreview() {
   if (!mid) mid = T('pvNone');
   const label = s.payMode === 'monthly' ? T('pvDayAdj') : T('pvDayPay');
   const sign = s.payMode === 'monthly' && r.total > 0 ? '+' : '';
-  el.innerHTML = T('pvWork', r.actualHours) + `${mid} = ${label} <b>${sign}${s.currency} ${fmtMoney(r.total)}</b>`;
+  el.innerHTML = T('pvWork', r.actualHours) + `${mid} = ${label} <b>${sign}${s.currency} ${fmtMoney(r.total)}</b>` + lateHint;
 }
 
 // 編輯模式：editingDate 為正在修改的記錄日期
@@ -958,7 +989,8 @@ function editRecord(date) {
   if (!r) return;
   editingDate = date;
   document.getElementById('workDate').value = date;
-  document.getElementById('dayType').value = r.type === 'off' ? 'off' : 'work';
+  document.getElementById('dayType').value =
+    r.type === 'off' ? 'off' : (r.type === 'late' ? 'late' : 'work');
   if (r.type !== 'off') {
     document.getElementById('workStart').value = r.start;
     document.getElementById('workEnd').value = r.end;
@@ -989,7 +1021,8 @@ function cancelEdit() {
 
 function addRecord() {
   const date = document.getElementById('workDate').value;
-  const isOff = document.getElementById('dayType').value === 'off';
+  const typeVal = document.getElementById('dayType').value;
+  const isOff = typeVal === 'off';
   const isManual = document.getElementById('payMode').value === 'manual';
   const start = document.getElementById('workStart').value;
   const end = document.getElementById('workEnd').value;
@@ -1026,9 +1059,10 @@ function addRecord() {
   } else if (isManual) {
     const amt = Math.max(0, parseFloat(document.getElementById('manualPay').value) || 0);
     records[date] = {
-      type: 'work',
+      type: typeVal,
       note,
       start, end,
+      lateMin: lateMinutes(start, s),
       payMode: s.payMode,
       base: amt,
       otHours: 0,
@@ -1041,9 +1075,10 @@ function addRecord() {
   } else {
     const r = calcDay(start, end, s, ded);
     records[date] = {
-      type: 'work',
+      type: typeVal,
       note,
       start, end,
+      lateMin: lateMinutes(start, s),
       payMode: s.payMode,
       base: r.base,
       otHours: r.otHours,
@@ -1116,21 +1151,26 @@ function render() {
   const monthly = s.payMode === 'monthly';
   const WEEKDAYS = I18N[LANG].weekdays;
   let daySum = 0, otHoursSum = 0, otPaySum = 0, deductSum = 0;
-  let workDays = 0, offDays = 0;
+  let workDays = 0, offDays = 0, lateDays = 0;
   let rows = '', cards = '';
   for (const d of dates) {
     const r = records[d];
     const isOff = r.type === 'off';
+    const isLate = !isOff && (r.type === 'late' || (r.lateMin || 0) > 0);
     const ded = r.deduction || 0;
     daySum += r.total;
     otHoursSum += r.otHours;
     otPaySum += r.otPay;
     deductSum += ded;
     if (isOff) offDays++; else workDays++;
+    if (isLate) lateDays++;
+    const lateTag = isLate
+      ? `<span class="late-badge">${(r.lateMin || 0) > 0 ? T('lateBadgeMin', r.lateMin) : T('lateBadge')}</span>`
+      : '';
     const checked = selectedDates.has(d) ? 'checked' : '';
     const totalCell = (monthly && r.total > 0 ? '+' : '') + fmtMoney(r.total);
-    const timeCell = isOff ? `<span class="off-badge">${T('offBadge')}</span>`
-      : (r.start && r.end ? `${r.start}–${r.end}` : '—');
+    const timeCell = (isOff ? `<span class="off-badge">${T('offBadge')}</span>`
+      : (r.start && r.end ? `${r.start}–${r.end}` : '—')) + (lateTag ? ' ' + lateTag : '');
     const noteCell = r.note ? `<span class="note-text">${esc(r.note)}</span>` : '—';
     rows += `<tr>
       <td><input type="checkbox" ${checked} onchange="toggleSelect('${d}', this.checked)"></td>
@@ -1150,6 +1190,7 @@ function render() {
     const amtClass = r.total < 0 ? ' neg' : (r.total === 0 ? ' zero' : '');
     let sub = isOff ? `<span class="off-badge">${T('offBadge')}</span>`
       : (r.start && r.end ? `<span>${r.start}–${r.end}</span>` : '');
+    if (lateTag) sub += lateTag;
     if (r.otHours > 0) sub += `<span class="ot">${T('cardOt', r.otHours, fmtMoney(r.otPay))}</span>`;
     if (ded > 0) sub += `<span class="ded">${T('cardDeduct', fmtMoney(ded))}</span>`;
     if (r.note) sub += `<span class="note">📝 ${esc(r.note)}</span>`;
@@ -1181,6 +1222,7 @@ function render() {
       : '';
   document.getElementById('statDays').textContent = workDays;
   document.getElementById('statOffDays').textContent = offDays;
+  document.getElementById('statLateDays').textContent = lateDays;
   document.getElementById('statOtHours').textContent = Math.round(otHoursSum * 100) / 100;
   document.getElementById('statOtPay').textContent = fmtMoney(Math.round(otPaySum * 100) / 100);
   document.getElementById('statDeduct').textContent = fmtMoney(Math.round(deductSum * 100) / 100);
